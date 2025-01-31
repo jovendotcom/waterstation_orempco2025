@@ -142,7 +142,13 @@
                 <select id="charge-to" class="form-select">
                     <option value="">-- Select Charge --</option>
                     <option value="Account1">Salary Deduction</option>
-                    <option value="Account2">Charge to Department</option>
+                    <option value="Account2">Charge to ORMECO</option>
+                    <option value="Account3">Charge to OREMPCO</option>
+                    <option value="Account4">Charge to KKOPI. Tea</option>
+                    <option value="Account5">Charge to La Pasta</option>
+                    <option value="Account6">Charge to Canteen</option>
+                    <option value="Account7">Charge to Power One</option>
+                    <option value="Account8">Charge to Others</option>
                 </select>
             </div>
 

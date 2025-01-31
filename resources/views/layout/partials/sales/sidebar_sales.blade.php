@@ -34,6 +34,11 @@
                 Product Inventory
             </a>
 
+            <a class="nav-link text-white {{ request()->routeIs('sales.stocksCount') ? 'active' : '' }}" href="{{ route('sales.stocksCount') }}">
+                <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                Stocks Count
+            </a>
+
             <a class="nav-link text-white {{ request()->routeIs('sales.customerlist') ? 'active' : '' }}" href="{{ route('sales.customerlist') }}">
                 <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-person-dress"></i></div>
                 Customers List

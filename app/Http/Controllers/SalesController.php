@@ -36,7 +36,7 @@ class SalesController extends Controller
                 $request->session()->put('loginId', $user->id);
 
                 // Redirect to the dashboard after login
-                return redirect()->route('sales.transaction')->with('success', 'Login Successful');
+                return redirect()->route('sales.transaction');
             } else {
                 return back()->with('fail', 'Incorrect Password!');
             }

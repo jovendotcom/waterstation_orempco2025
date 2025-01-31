@@ -61,6 +61,10 @@ Route::prefix('sales')->group(function () {
 
 
         Route::GET('/productInventory', [ProductInventoryController::class, 'productInventory'])->name('sales.productInventory');
+        Route::GET('/stockscount', [ProductInventoryController::class, 'countStocks'])->name('sales.stocksCount');
+        Route::post('/stocks/store', [ProductInventoryController::class, 'storeStockCount'])->name('stocks.store');
+        Route::patch('/stocks/update', [ProductInventoryController::class, 'updateStockCount'])->name('stocks.update');
+
 
         Route::post('/products/store', [ProductInventoryController::class, 'storeProduct'])->name('products.store');
         
