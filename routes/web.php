@@ -18,7 +18,7 @@ use App\Http\Controllers\ProductInventoryController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('saleslogin'); // Redirect to adminlogin
 });
 
 //Admin Routes

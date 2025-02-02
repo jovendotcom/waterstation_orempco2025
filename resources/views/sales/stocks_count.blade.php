@@ -1,5 +1,7 @@
 @extends('layout.sales')
 
+@section('title', 'Stocks Count')
+
 @section('content')
 <h1 class="mt-4">Stocks Count</h1>
     <ol class="breadcrumb">

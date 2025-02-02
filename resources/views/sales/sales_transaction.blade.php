@@ -47,7 +47,7 @@
                                 <p class="card-text">Price: &#8369;{{ number_format($product->price, 2) }}</p>
                                 <form action="#" method="POST">
                                     @csrf
-                                    <button type="submit" class="btn btn-primary w-100">Buy</button>
+                                    <button type="submit" class="btn btn-success w-100">Buy</button>
                                 </form>
                             </div>
                         </div>

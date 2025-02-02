@@ -267,6 +267,7 @@
                             <label for="employeeDepartment" class="form-label">Department</label>
                             <select class="form-select @error('department') is-invalid @enderror" id="employeeDepartment" name="department">
                                 <option value="" disabled {{ old('department') ? '' : 'selected' }}>Select a department</option>
+                                <option value="NON-MEMBER" {{ old('department') == 'NON-MEMBER' ? 'selected' : '' }}>NON-MEMBER</option>
                                 @foreach($departments as $department)
                                     <option value="{{ $department }}" {{ old('department') == $department ? 'selected' : '' }}>{{ $department }}</option>
                                 @endforeach
