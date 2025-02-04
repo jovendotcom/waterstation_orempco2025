@@ -65,8 +65,7 @@ Route::prefix('sales')->group(function () {
         Route::post('/stocks/store', [ProductInventoryController::class, 'storeStockCount'])->name('stocks.store');
         Route::patch('/stocks/update', [ProductInventoryController::class, 'updateStockCount'])->name('stocks.update');
 
-
-        Route::post('/products/store', [ProductInventoryController::class, 'storeProduct'])->name('products.store');
+        Route::post('/products/store', [ProductInventoryController::class, 'store'])->name('products.storeProduct');
         
     });
 });

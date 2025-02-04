@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Product;
+use App\Models\ProductForSale;
 use App\Models\Customer;
 use App\Models\UserLog;
 use Session;
@@ -98,7 +99,7 @@ class SalesController extends Controller
 
     public function salesTransaction(Request $request)
     {
-        $products = Product::all(); // Fetch all products
+        $products = ProductForSale::all(); // Fetch all products
         $customers = Customer::orderBy('full_name', 'asc')->get(); // Fetch customers in alphabetical order
     
         return view('sales.sales_transaction', compact('products', 'customers')); // Pass both products and customers to the view

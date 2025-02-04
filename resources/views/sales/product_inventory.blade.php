@@ -53,15 +53,51 @@
                     <tr>
                         <th>Product Image</th>
                         <th>Product Name</th>
-                        <th>Item(s) Needed<th>
+                        <th>Item(s) Needed</th>
                         <th>Quantity</th>
                         <th>Price</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-
+                    @forelse ($products as $product)
+                        <tr>
+                            <td>
+                                @if($product->product_image)
+                                    <img src="{{ asset('storage/' . $product->product_image) }}" alt="Product Image" style="width: 100px; height: 100px; object-fit: cover;">
+                                @else
+                                    <span>No Image</span>
+                                @endif
+                            </td>
+                            <td>{{ $product->product_name }}</td>
+                            <td>
+                                @php
+                                    $items = is_array($product->items_needed) ? $product->items_needed : json_decode($product->items_needed, true);
+                                @endphp
+                                @if(!empty($items))
+                                    <ul class="list-unstyled mb-0">
+                                        @foreach($items as $item)
+                                            <li>{{ $item }}</li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    <span>No Items Needed</span>
+                                @endif
+                            </td>
+                            <td>{{ $product->quantity ?? 'N/A' }}</td>
+                            <td>{{ number_format($product->price, 2) }}</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm">Update</button>
+                                <button class="btn btn-danger btn-sm">Delete</button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center">No products found</td>
+                        </tr>
+                    @endforelse
                 </tbody>
+
             </table>
         </div>
     </div>
@@ -70,29 +106,38 @@
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addUserModalLabel">Add New Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    
+            <form action="{{ route('products.storeProduct') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">Add New Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Product Name Field -->
                     <div class="mb-3">
                         <label for="product_name" class="form-label">Product Name</label>
-                        <input type="text" class="form-control" id="product_name" name="product_name" required>
+                        <input type="text" class="form-control @error('product_name') is-invalid @enderror" id="product_name" name="product_name" value="{{ old('product_name') }}" required>
+                        
+                        @error('product_name')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
-                    
+
+                    <!-- Price Field -->
                     <div class="mb-3">
                         <label for="price" class="form-label">Price</label>
                         <input type="number" step="0.01" class="form-control" id="price" name="price" required>
                     </div>
                     
+                    <!-- Quantity Field -->
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Quantity</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" required>
+                        <input type="number" class="form-control" id="quantity" name="quantity">
                     </div>
                     
+                    <!-- Product Image Field -->
                     <div class="mb-3">
                         <label for="product_image" class="form-label">Product Image</label>
                         <input type="file" class="form-control" id="product_image" name="product_image" accept="image/*" required onchange="previewImage(event)">
@@ -102,12 +147,13 @@
                         <img id="imagePreview" src="" class="img-fluid rounded" style="max-height: 150px; display: none;">
                     </div>
                     
+                    <!-- Items Needed Field -->
                     <div class="mb-3">
                         <label class="form-label">Select Item(s) Needed for this product:</label>
                         <div class="border p-2 rounded" style="max-height: 200px; overflow-y: auto;">
                             @foreach($stocks->sortBy('item_name') as $stock)
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="items[]" value="{{ $stock->id }}" id="stock_{{ $stock->id }}">
+                                    <input class="form-check-input" type="checkbox" name="items_needed[{{ $stock->id }}]" value="{{ $stock->item_name }}">
                                     <label class="form-check-label" for="stock_{{ $stock->id }}">
                                         <strong class="text-black">{{ $stock->item_name }}</strong> <span class="text-success">(Available: {{ $stock->quantity }})</span>
                                     </label>
@@ -115,13 +161,13 @@
                             @endforeach
                         </div>
                     </div>
-                    
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Save Product</button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -136,6 +182,12 @@
         };
         reader.readAsDataURL(event.target.files[0]);
     }
+
+    // Open modal if validation errors exist
+    @if ($errors->any())
+        const addUserModal = new bootstrap.Modal(document.getElementById('addUserModal'));
+        addUserModal.show();
+    @endif
 </script>
 
 

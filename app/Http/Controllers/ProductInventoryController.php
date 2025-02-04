@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Models\ProductForSale;
 use App\Models\StocksCount;
 use App\Models\UserLog;
 use Illuminate\Validation\Rule;
@@ -18,44 +19,80 @@ class ProductInventoryController extends Controller
 {
     public function productInventory(Request $request)
     {
-        $products = Product::paginate(10);
+        $products = ProductForSale::paginate(10);
         $stocks = StocksCount::all(); // Fetch available stock items
     
         return view('sales.product_inventory', compact('products', 'stocks'));
     }    
 
-    public function storeProduct(Request $request)
+    public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        // Validate request
+        $request->validate([
             'product_name' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
-            'variant' => 'nullable|string|max:255',
-            'unit' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'quantity' => 'required|integer|min:0',
-            'low_stock_limit' => 'required|integer|min:0',
+            'price' => 'required|numeric',
+            'quantity' => 'nullable|integer|min:0',
             'product_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'items_needed' => 'nullable|array',
         ]);
     
+        // Check if the product with the same name and price already exists
+        $existingProduct = ProductForSale::where('product_name', $request->product_name)
+                                          ->where('price', $request->price)
+                                          ->first();
+    
+        if ($existingProduct) {
+            return redirect()->back()->with('fail', 'A product with the same name and price already exists.');
+        }
+    
+        // Handle product image upload
         $imagePath = null;
         if ($request->hasFile('product_image')) {
             $imagePath = $request->file('product_image')->store('product_images', 'public');
         }
     
-        Product::create([
-            'product_name' => $validatedData['product_name'],
-            'category' => $validatedData['category'],
-            'variant' => $validatedData['variant'],
-            'unit' => $validatedData['unit'],
-            'price' => $validatedData['price'],
-            'quantity' => $validatedData['quantity'],
-            'low_stock_limit' => $validatedData['low_stock_limit'],
-            'status' => 'Available',
+        // Decode selected items
+        $itemsNeeded = $request->items_needed ?? [];
+    
+        // Check stock availability
+        $productQuantity = $request->quantity ?? null;
+        foreach ($itemsNeeded as $stockId => $stockName) {
+            $stock = StocksCount::find($stockId);
+    
+            if (!$stock) {
+                return redirect()->back()->with('fail', "Stock item '$stockName' not found.");
+            }
+    
+            if ($productQuantity !== null && $stock->quantity < $productQuantity) {
+                return redirect()->back()->with('fail', "Not enough stock for '$stock->item_name'. Available: $stock->quantity, Required: $productQuantity.");
+            }
+        }
+    
+        // Create new product
+        $product = ProductForSale::create([
+            'product_name' => $request->product_name,
+            'price' => $request->price,
+            'quantity' => $productQuantity,
             'product_image' => $imagePath,
+            'items_needed' => json_encode($itemsNeeded),
         ]);
+    
+        // Deduct stock quantities if product has a set quantity
+        if ($productQuantity !== null) {
+            foreach ($itemsNeeded as $stockId => $stockName) {
+                $stock = StocksCount::find($stockId);
+                if ($stock) {
+                    $stock->quantity -= $productQuantity;
+                    $stock->save();
+                }
+            }
+        }
     
         return redirect()->back()->with('success', 'Product added successfully.');
     }
+    
+    
+    
     
     public function countStocks(Request $request)
     {
