@@ -261,17 +261,19 @@
         cart.forEach(item => {
             totalItems += item.qty;
             totalAmount += item.subtotal;
-            
+
             let row = document.createElement("tr");
             row.innerHTML = `
-                <td>${item.name}</td>
+                <td style="max-width: 150px; word-wrap: break-word; white-space: normal;">${item.name}</td>
                 <td class="text-center">
-                    <button class="btn btn-sm btn-danger me-1" onclick="changeQty(${item.id}, -1)">-</button>
-                    ${item.qty}
-                    <button class="btn btn-sm btn-success ms-1" onclick="changeQty(${item.id}, 1)">+</button>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <button class="btn btn-sm btn-danger" onclick="changeQty(${item.id}, -1)">-</button>
+                        <span style="min-width: 30px; text-align: center;">${item.qty}</span>
+                        <button class="btn btn-sm btn-success" onclick="changeQty(${item.id}, 1)">+</button>
+                    </div>
                 </td>
-                <td>&#8369;${item.price.toFixed(2)}</td>
-                <td>&#8369;${item.subtotal.toFixed(2)}</td>
+                <td style="white-space: nowrap;">&#8369;${item.price.toFixed(2)}</td>
+                <td style="white-space: nowrap;">&#8369;${item.subtotal.toFixed(2)}</td>
             `;
             cartItemsContainer.appendChild(row);
         });
@@ -279,6 +281,7 @@
         document.getElementById("total-items").textContent = totalItems;
         document.getElementById("total-amount").textContent = totalAmount.toFixed(2);
     }
+
 
     function changeQty(productId, change) {
         let product = cart.find(item => item.id === productId);
