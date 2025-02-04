@@ -19,7 +19,7 @@ class ProductInventoryController extends Controller
 {
     public function productInventory(Request $request)
     {
-        $products = ProductForSale::paginate(10);
+        $products = ProductForSale::all();
         $stocks = StocksCount::all(); // Fetch available stock items
     
         return view('sales.product_inventory', compact('products', 'stocks'));

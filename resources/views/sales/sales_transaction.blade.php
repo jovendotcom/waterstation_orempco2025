@@ -47,7 +47,12 @@
                                 <p class="card-text">Price: &#8369;{{ number_format($product->price, 2) }}</p>
                                 <form action="#" method="POST">
                                     @csrf
-                                    <button type="submit" class="btn btn-success w-100">Buy</button>
+                                    <button type="button" class="btn btn-success w-100" 
+                                        data-id="{{ $product->id }}" 
+                                        data-name="{{ $product->product_name }}" 
+                                        data-price="{{ $product->price }}">
+                                        Buy
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -89,7 +94,7 @@
                     <thead>
                         <tr>
                             <th>Product</th>
-                            <th>Qty</th>
+                            <th>Quantity</th>
                             <th>Price</th>
                             <th>Subtotal</th>
                         </tr>
@@ -221,6 +226,86 @@
             let totalAmount = parseFloat($('#total-amount').text()) || 0;
             let change = tendered - totalAmount;
             $('#change').val(change >= 0 ? change.toFixed(2) : '0.00');
+        });
+    });
+
+    // Example products object to simulate the cart state
+    let cart = []; // Holds items in the format [{ id, name, price, qty, subtotal }]
+
+    function addToCart(productId, productName, productPrice) {
+        // Check if product is already in the cart
+        let product = cart.find(item => item.id === productId);
+        
+        if (product) {
+            product.qty++;
+            product.subtotal = product.price * product.qty;
+        } else {
+            cart.push({
+                id: productId,
+                name: productName,
+                price: parseFloat(productPrice),
+                qty: 1,
+                subtotal: parseFloat(productPrice)
+            });
+        }
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        let cartItemsContainer = document.getElementById("cart-items");
+        cartItemsContainer.innerHTML = ""; // Clear current list
+
+        let totalItems = 0;
+        let totalAmount = 0;
+
+        cart.forEach(item => {
+            totalItems += item.qty;
+            totalAmount += item.subtotal;
+            
+            let row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-danger me-1" onclick="changeQty(${item.id}, -1)">-</button>
+                    ${item.qty}
+                    <button class="btn btn-sm btn-success ms-1" onclick="changeQty(${item.id}, 1)">+</button>
+                </td>
+                <td>&#8369;${item.price.toFixed(2)}</td>
+                <td>&#8369;${item.subtotal.toFixed(2)}</td>
+            `;
+            cartItemsContainer.appendChild(row);
+        });
+
+        document.getElementById("total-items").textContent = totalItems;
+        document.getElementById("total-amount").textContent = totalAmount.toFixed(2);
+    }
+
+    function changeQty(productId, change) {
+        let product = cart.find(item => item.id === productId);
+
+        if (product) {
+            product.qty += change;
+            if (product.qty <= 0) {
+                cart = cart.filter(item => item.id !== productId); // Remove item from cart
+            } else {
+                product.subtotal = product.price * product.qty;
+            }
+        }
+
+        updateCartUI();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Sample dynamic product loading for demonstration purposes
+        document.querySelectorAll(".btn-success").forEach(button => {
+            button.addEventListener("click", function (e) {
+                e.preventDefault();
+                const productId = parseInt(this.dataset.id);
+                const productName = this.dataset.name;
+                const productPrice = this.dataset.price;
+
+                addToCart(productId, productName, productPrice);
+            });
         });
     });
 </script>
