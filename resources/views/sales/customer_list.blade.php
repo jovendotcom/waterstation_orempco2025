@@ -70,7 +70,7 @@
                                 data-customer-type="{{ $customer->type }}"
                                 data-customer-department="{{ $customer->department }}"
                                 data-customer-employee-id="{{ $customer->employee_id }}">
-                                Edit
+                                Update
                             </button>
                             <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteCustomerModal" 
                                 data-customer-id="{{ $customer->id }}" data-customer-name="{{ $customer->full_name }}">
@@ -117,7 +117,7 @@
                     <div id="editDepartmentField" class="d-none">
                         <div class="mb-3">
                             <label for="editDepartmentInput" class="form-label">Department Name</label>
-                            <input type="text" class="form-control" id="editDepartmentInput" name="department" placeholder="Enter department name">
+                            <input type="text" class="form-control" id="editDepartmentInput" name="department" placeholder="Enter department name" disabled>
                         </div>
                     </div>
 
@@ -125,13 +125,13 @@
                     <div id="editEmployeeFields" class="d-none">
                         <div class="mb-3">
                             <label for="editEmployeeId" class="form-label">Member ID</label>
-                            <input type="text" class="form-control" id="editEmployeeId" name="employee_id" placeholder="Enter employee ID" readonly>
+                            <input type="text" class="form-control" id="editEmployeeId" name="employee_id" placeholder="Enter employee ID" disabled>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col">
                                 <label for="editFullName" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="editFullName" name="full_name" placeholder="Full Name" readonly>
+                                <input type="text" class="form-control" id="editFullName" name="full_name" placeholder="Full Name" disabled>
                             </div>
                         </div>
 

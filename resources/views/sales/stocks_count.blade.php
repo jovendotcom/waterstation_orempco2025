@@ -142,19 +142,29 @@
 
 
 <script>
-    // Set item name and quantity in the modal when "Add" button is clicked
-    const updateStockModal = document.getElementById('updateStockModal');
-    updateStockModal.addEventListener('show.bs.modal', (event) => {
-        const button = event.relatedTarget;
-        const itemName = button.getAttribute('data-item-name');
-        const quantity = button.getAttribute('data-quantity');
+    document.addEventListener("DOMContentLoaded", function () {
+        // Get the update stock modal
+        const updateStockModal = document.getElementById('updateStockModal');
 
-        const itemNameInput = updateStockModal.querySelector('#update_item_name');
-        const quantityInput = updateStockModal.querySelector('#update_quantity');
+        updateStockModal.addEventListener('show.bs.modal', (event) => {
+            const button = event.relatedTarget;
+            const itemName = button.getAttribute('data-item-name');
+            const quantity = button.getAttribute('data-quantity');
 
-        itemNameInput.value = itemName;
-        quantityInput.setAttribute('min', quantity);  // Ensuring we cannot add negative stock
+            const itemNameInput = updateStockModal.querySelector('#update_item_name');
+            const quantityInput = updateStockModal.querySelector('#update_quantity');
+
+            itemNameInput.value = itemName;
+            quantityInput.setAttribute('min', 1); // Ensuring a valid minimum
+            quantityInput.value = ''; // Clear previous input
+
+            // Focus on the quantity input when the modal opens
+            setTimeout(() => {
+                quantityInput.focus();
+            }, 500); // Delay to ensure modal animation completes
+        });
     });
 </script>
+
 
 @endsection

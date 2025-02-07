@@ -24,7 +24,7 @@
                 Sales Transaction
             </a>
 
-            <a class="nav-link text-white">
+            <a class="nav-link text-white {{ request()->routeIs('sales.salesHistory') ? 'active' : '' }}" href="{{ route('sales.salesHistory') }}">
                 <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-file-waveform"></i></div>
                 Sales History
             </a>

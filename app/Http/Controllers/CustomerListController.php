@@ -65,7 +65,7 @@ class CustomerListController extends Controller
                 return redirect()
                     ->back()
                     ->withInput()
-                    ->withErrors(['employee_id' => 'This Employee ID already exists.']);
+                    ->withErrors(['employee_id' => 'This Member ID already exists.']);
             }
     
             $fullName = strtoupper($lastName) . ', ' . strtoupper($firstName);

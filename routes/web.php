@@ -52,6 +52,10 @@ Route::prefix('sales')->group(function () {
         Route::POST('/saleslogout', [SalesController::class, 'saleslogout'])->name('sales.logout');
         Route::GET('/customerlist', [SalesController::class, 'customerList'])->name('sales.customerlist');
         Route::get('/sales/customers', [SalesController::class, 'getCustomers'])->name('sales.customers');
+        Route::post('/sales/store', [SalesController::class, 'store'])->name('sales.store');
+        Route::get('/sales/new-po', [SalesController::class, 'newPo'])->name('sales.newPo');
+
+        Route::GET('/saleshistory', [SalesController::class, 'salesHistory'])->name('sales.salesHistory');
 
         Route::post('/customers', [CustomerListController::class, 'store'])->name('customers.store');
         Route::get('/get-departments', [CustomerListController::class, 'getDepartments']);//this is to show the departments in the dropdown
