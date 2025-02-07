@@ -42,7 +42,6 @@
                     <tr>
                         <th>SO Date</th>
                         <th>SO Number</th>
-                        <th>Customer Name</th>
                         <th>Remarks</th>
                         <th>Actions</th>
                     </tr>
@@ -52,8 +51,13 @@
                         <tr>
                             <td>{{ $sale->created_at->format('m-d-Y h:i:s a') }}</td>
                             <td>{{ $sale->po_number }}</td>
-                            <td>{{ $sale->customer ? $sale->customer->full_name : 'N/A' }}</td>
-                            <td></td>
+                            <td>
+                                @if ($sale->remarks == 'Not Paid')
+                                    <span class="badge bg-danger">{{ $sale->remarks }}</span>
+                                @else 
+                                    <span class="badge bg-success">{{ $sale->remarks }}</span>
+                                @endif
+                            </td>
                             <td>
                                 <a href="#" class="btn btn-primary btn-sm">
                                     <i class="fa-solid fa-eye"></i> View

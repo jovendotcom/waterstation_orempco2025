@@ -148,6 +148,9 @@ class SalesController extends Controller
         try {
             DB::beginTransaction();
     
+            // Determine remarks based on payment method
+            $remarks = $request->payment_method === 'cash' ? 'Paid' : 'Not Paid';
+    
             // Create sales transaction
             $sale = SalesTransaction::create([
                 'po_number' => $request->po_number,
@@ -159,6 +162,7 @@ class SalesController extends Controller
                 'change_amount' => $request->change_amount ?? null,
                 'credit_payment_method' => $request->charge_to ?? null,
                 'total_items' => $request->total_items,
+                'remarks' => $remarks, // Set remarks dynamically
             ]);
     
             // Process each item in the cart
@@ -240,6 +244,7 @@ class SalesController extends Controller
             ], 500);
         }
     }
+    
     
     
     public function salesHistory(Request $request)

@@ -19,6 +19,7 @@ class SalesTransaction extends Model
         'change_amount',
         'credit_payment_method',
         'total_items',
+        'remarks',
     ];
 
     // Relationship with Customer
