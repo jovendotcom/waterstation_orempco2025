@@ -4,19 +4,57 @@
 
 @section('content')
 <h1 class="mt-4">Sales Transaction</h1>
+<style>
+    @media print {
+    body {
+        font-family: Arial, sans-serif;
+        width: 57mm;
+        margin: 0;
+        padding: 0;
+    }
+    div {
+        width: 57mm;
+        font-size: 10px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    td, th {
+        text-align: left;
+        font-size: 10px;
+    }
+}
+
+</style>
+
+<div id="alert-container"></div>
 
 <!-- Success and Error Messages -->
-@if(Session::has('success'))
+@if (Session::has('success'))
     <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
         <i class="fas fa-check-circle me-2 fa-lg"></i>
-        <div>{{ Session::get('success') }}</div>
+        <div>
+            {{ Session::get('success') }}
+        </div>
         <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-@if(Session::has('fail'))
+@if (Session::has('danger'))
     <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert">
         <i class="fas fa-exclamation-triangle me-2 fa-lg"></i>
-        <div>{{ Session::get('fail') }}</div>
+        <div>
+            {{ Session::get('danger') }}
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+@if (Session::has('warning'))
+    <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center" role="alert">
+        <i class="fas fa-exclamation-circle me-2 fa-lg"></i>
+        <div>
+            {{ Session::get('warning') }}
+        </div>
         <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
@@ -74,7 +112,7 @@
             <div class="card-body d-flex flex-column justify-content-between">
                 <!-- PO Number and Date-Time -->
                 <div class="mb-3">
-                    <p class="mb-1"><strong>PO Number:</strong> <span id="po-number" style="font-weight: bold; color: red;">{{ $poNumber }}</span></p>
+                    <p class="mb-1"><strong>SO Number:</strong> <span id="po-number" style="font-weight: bold; color: red;">{{ $poNumber }}</span></p>
                     <p class="mb-1"><strong>Date & Time:</strong> <span id="date-time" style="font-weight: bold; color: red;"></span></p>
                 </div>
                 
@@ -382,9 +420,32 @@ $(document).ready(function () {
                 cart: cart
             }),
             success: function (response) {
-                console.log(response);
-                alert(response.message);
-                resetSummary();
+                if (response.success) {
+                    showAlert(response.message, 'success');
+
+                    // Ensure transactionNo and cashierName are properly passed
+                    const transactionNo = response.transaction_no ||
+                        'N/A'; // Default to 'N/A' if undefined
+                    const cashierName =
+                        '{{ Auth::guard('sales')->user()->full_name; }}'; // Assuming this is the correct way to get the cashier's name
+
+                    // Trigger invoice generation and printing
+                    generateSalesInvoice({
+                        cashierName: cashierName,
+                        dateTime: new Date().toLocaleString(),
+                        poNumber: $('#po-number').text(),
+                        cart: cart,
+                        totalItems: $('#total-items').text(),
+                        totalAmount: $('#total-amount').text(),
+                        paymentMethod: paymentMethod,
+                        chargeTo: chargeTo,
+                        amountTendered: amountTendered,
+                        changeAmount: $('#change').val() 
+                    });
+                    resetSummary();
+                } else {
+                    showAlert(response.message, 'danger');
+                }
             },
             error: function (xhr) {
                 console.error("Transaction failed:", xhr.responseJSON);
@@ -406,6 +467,132 @@ $(document).ready(function () {
         $('#credit-fields').hide();  // Hide credit fields
         refreshPoNumber(); // Refresh to get a new PO number
     }
+
+
+    // Function to show alert messages with auto-dismiss and optional page reload
+    function showAlert(message, type) {
+        console.log("Alert Message:", message, "Type:", type); // Debugging
+
+        const alertId = 'alert-' + Date.now();
+        let icon = (type === 'success') ? 'check-circle' :
+                   (type === 'danger') ? 'exclamation-triangle' :
+                   'info-circle';
+
+        const alertHtml = `
+            <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${icon} me-2"></i> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+
+        $('#alert-container').html(alertHtml);
+
+        setTimeout(() => $('#' + alertId).fadeOut(), 2000);
+    }
+
+    function generateSalesInvoice(data) {
+    const {
+        cashierName, dateTime, poNumber, cart, totalItems,
+        totalAmount, paymentMethod, chargeTo, amountTendered, changeAmount
+    } = data;
+
+    let printContent = `
+        <div style="font-family: Arial, sans-serif; width: 57mm; margin: 0 auto; padding: 5px; text-align: left; font-size: 10px;">
+            <p style="text-align: center; font-size: 12px;">
+                <strong>ORMECO EMPLOYEES MULTI-PURPOSE COOPERATIVE (OREMPCO)</strong><br>
+                Sta. Isabel, Calapan City Oriental Mindoro<br>
+                CDA Resgistration No.: 9520-04002679<br>
+                NVAT-Exempt TIN: 004-175-226-000
+            </p>
+            ====================================
+            <p><strong>Sales Order Number:</strong> ${poNumber}</p>
+            <p><strong>Waterstation Staff:</strong> ${cashierName}</p>
+            <p><strong>Date/Time:</strong> ${dateTime}</p>
+            ====================================
+            <table>
+                <tr>
+                    <th>Item</th>
+                    <th style="text-align: right;">Qty</th>
+                    <th style="text-align: right;">Price</th>
+                    <th style="text-align: right;">Sub-Total</th>
+                </tr>
+    `;
+
+    cart.forEach(item => {
+        printContent += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td style="text-align: right;">${item.qty}</td>
+                    <td style="text-align: right;">₱${parseFloat(item.price).toFixed(2)}</td>
+                    <td style="text-align: right;">₱${parseFloat(item.subtotal).toFixed(2)}</td>
+                </tr>
+        `;
+    });
+
+    printContent += `
+            </table>
+            ====================================
+            <p><strong>Total Items:</strong> <span style="float: right;">${totalItems}</span></p>
+            <p><strong>Total Amount:</strong> <span style="float: right;">₱${totalAmount}</span></p>
+            <p><strong>Payment Method:</strong> <span style="float: right;">${paymentMethod}</span></p>
+            <p><strong>Status:</strong> <span style="float: right;">${paymentMethod === 'credit' ? 'Not Paid' : 'Paid'}</span></p>
+    `;
+
+    if (paymentMethod === 'cash') {
+        printContent += `
+            <p><strong>Amount Tendered:</strong> <span style="float: right;">₱${parseFloat(amountTendered).toFixed(2)}</span></p>
+            <p><strong>Change:</strong> <span style="float: right;">₱${parseFloat(changeAmount).toFixed(2)}</span></p>
+        `;
+    } else if (paymentMethod === 'credit') {
+        printContent += `
+            <p><strong>Charge To:</strong> <span style="float: right;">${chargeTo}</span></p>
+        `;
+    }
+
+    printContent += `
+            ====================================
+            <p style="text-align: center; font-size: 10px;">
+                This is your Sales Invoice
+            </p>
+            <p style="text-align: center; font-size: 9px;">
+                Thank you for shopping with us!
+            </p>
+        </div>
+    `;
+
+    const printWindow = window.open('', '', 'width=400,height=600');
+    printWindow.document.write('<html><head><title>Sales Invoice</title><style>');
+    printWindow.document.write(`
+        @media print {
+            body {
+                font-family: Arial, sans-serif;
+                width: 57mm;
+                margin: 0;
+                padding: 0;
+            }
+            div {
+                width: 57mm;
+                font-size: 10px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            td, th {
+                text-align: left;
+                font-size: 10px;
+            }
+        }
+    `);
+    printWindow.document.write('</style></head><body>');
+    printWindow.document.write(printContent);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+}
+
+
+
 });
 </script>
 

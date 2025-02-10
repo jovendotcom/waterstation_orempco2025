@@ -109,7 +109,7 @@ class SalesController extends Controller
                              ->get(); // Fetch customers
     
         // Generate PO number
-        $poNumber = 'PO-' . strtoupper(uniqid());
+        $poNumber = 'SO-' . strtoupper(uniqid());
         
         return view('sales.sales_transaction', compact('products', 'customers', 'poNumber')); // Pass both products and customers to the view
     }
@@ -117,7 +117,7 @@ class SalesController extends Controller
 
     public function newPo()
     {
-        $poNumber = 'PO-' . strtoupper(uniqid());
+        $poNumber = 'SO-' . strtoupper(uniqid());
         return response()->json(['po_number' => $poNumber]);
     }
 
