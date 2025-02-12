@@ -61,7 +61,7 @@
 
 <div class="row" style="height: calc(90vh - 120px);">
     <!-- Left Container (70%) -->
-    <div class="col-lg-9 d-flex">
+    <div class="col-lg-7 d-flex">
         <div class="card mb-4 flex-fill">
             <!-- Fixed Header -->
             <div class="card-header" style="position: sticky; top: 0; z-index: 1; background: white;">
@@ -81,7 +81,7 @@
                                 alt="{{ $product->product_name }}" 
                                 style="max-height: 150px; width: auto; margin: 0 auto; display: block;">
                             <div class="card-body">
-                                <h5 class="card-title">{{ $product->product_name }}</h5>
+                                <h6 class="card-title">{{ $product->product_name }}</h6>
                                 <p class="card-text" style="color: green;">Stock Available: <span style="font-weight: bold">{{ $product->quantity ?? 'N/A'}}</span></p>
                                 <p class="card-text" style="font-weight: bold; color: green;">Price: &#8369;{{ number_format($product->price, 2) }}</p>
                                 <form action="#" method="POST">
@@ -89,7 +89,8 @@
                                     <button type="button" class="buy-btn btn btn-success w-100" 
                                         data-id="{{ $product->id }}" 
                                         data-name="{{ $product->product_name }}" 
-                                        data-price="{{ $product->price }}">
+                                        data-price="{{ $product->price }}"
+                                        data-items-needed="{{ $product->items_needed }}">
                                         Buy
                                     </button>
                                 </form>
@@ -103,7 +104,7 @@
     </div>
 
     <!-- Right Container (30%) -->
-    <div class="col-lg-3 d-flex">
+    <div class="col-lg-5 d-flex">
         <div class="card mb-4 flex-fill" style="box-shadow: 12px 12px 7px rgba(0, 0, 0, 0.3); position: sticky; top: 100px; height: calc(100vh - 160px); overflow-y: auto;">
             <div class="card-header">
                 <i class="fas fa-table me-1"></i>
@@ -136,6 +137,7 @@
                                 <th>Quantity</th>
                                 <th>Price</th>
                                 <th>Subtotal</th>
+                                <th>Material(s) Needed</th>
                             </tr>
                         </thead>
                         <tbody id="cart-items">
@@ -255,14 +257,17 @@ $(document).ready(function () {
 // Cart handling
 let cart = []; // Array of objects { id, name, price, qty, subtotal }
 
-function addToCart(productId, productName, productPrice) {
-    console.log("Adding to cart:", { productId, productName, productPrice });
+function addToCart(productId, productName, productPrice, itemsNeededJson) {
+    console.log("Adding to cart:", { productId, productName, productPrice, itemsNeededJson });
 
     if (!productId || !productName || isNaN(productPrice) || productPrice <= 0) {
         console.error("Invalid product data", { productId, productName, productPrice });
         alert("Invalid product data! Check the console (F12).");
         return;
     }
+
+    // Parse items_needed JSON (if available)
+    let itemsNeeded = itemsNeededJson ? JSON.parse(itemsNeededJson) : {};
 
     let product = cart.find(item => item.id === productId);
 
@@ -275,11 +280,13 @@ function addToCart(productId, productName, productPrice) {
             name: productName,
             price: productPrice,
             qty: 1,
-            subtotal: productPrice
+            subtotal: productPrice,
+            materials: itemsNeeded // Store required materials
         });
     }
     updateCartUI();
 }
+
 
 function updateCartUI() {
     let cartItemsContainer = document.getElementById("cart-items");
@@ -291,6 +298,26 @@ function updateCartUI() {
     cart.forEach(item => {
         totalItems += item.qty;
         totalAmount += item.subtotal;
+
+        let materialsListHTML = "";
+
+        // Check if there are required materials
+        if (Object.keys(item.materials).length > 0) {
+            for (let key in item.materials) {
+                materialsListHTML += `
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>${item.materials[key]}</span>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <button class="btn btn-sm btn-danger" onclick="changeItemNeededQty(${item.id}, '${key}', -1)">-</button>
+                            <span id="item-needed-${item.id}-${key}">1</span>
+                            <button class="btn btn-sm btn-success" onclick="changeItemNeededQty(${item.id}, '${key}', 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            materialsListHTML = `<span>None</span>`;
+        }
 
         let row = document.createElement("tr");
         row.innerHTML = `
@@ -304,6 +331,7 @@ function updateCartUI() {
             </td>
             <td style="white-space: nowrap;">&#8369;${item.price.toFixed(2)}</td>
             <td style="white-space: nowrap;">&#8369;${item.subtotal.toFixed(2)}</td>
+            <td>${materialsListHTML}</td>  <!-- Display Materials Needed -->
         `;
         cartItemsContainer.appendChild(row);
     });
@@ -311,6 +339,8 @@ function updateCartUI() {
     document.getElementById("total-items").textContent = totalItems;
     document.getElementById("total-amount").textContent = totalAmount.toFixed(2);
 }
+
+
 
 function changeQty(productId, change) {
     let product = cart.find(item => item.id === productId);
@@ -335,8 +365,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const productId = parseInt(this.dataset.id, 10);
             const productName = this.dataset.name;
             const productPrice = parseFloat(this.dataset.price);
+            const itemsNeeded = this.dataset.itemsNeeded; // Get items_needed JSON
 
-            console.log("Parsed Values:", { productId, productName, productPrice });
+            console.log("Parsed Values:", { productId, productName, productPrice, itemsNeeded });
 
             if (Number.isNaN(productId) || productId <= 0 || !productName || Number.isNaN(productPrice) || productPrice <= 0) {
                 console.error("Invalid product data", { productId, productName, productPrice });
@@ -344,10 +375,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            addToCart(productId, productName, productPrice);
+            addToCart(productId, productName, productPrice, itemsNeeded);
         });
     });
 });
+
 
 // Function to refresh the PO number after a successful transaction
 function refreshPoNumber() {
