@@ -340,6 +340,17 @@ function updateCartUI() {
     document.getElementById("total-amount").textContent = totalAmount.toFixed(2);
 }
 
+function changeItemNeededQty(productId, itemKey, change) {
+    let neededQtyElement = document.getElementById(`item-needed-${productId}-${itemKey}`);
+    let currentQty = parseInt(neededQtyElement.innerText, 10);
+    
+    let newQty = currentQty + change;
+    if (newQty < 0) newQty = 0; // Prevent negative values
+
+    neededQtyElement.innerText = newQty;
+}
+
+
 
 
 function changeQty(productId, change) {
