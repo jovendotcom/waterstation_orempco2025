@@ -529,21 +529,21 @@ $(document).ready(function () {
     } = data;
 
     let printContent = `
-        <div style="font-family: Arial, sans-serif; width: 57mm; margin: 0 auto; padding: 5px; text-align: left; font-size: 10px;">
+        <div style="font-family: Arial, sans-serif; width: 100%; margin: 0; padding: 0; text-align: left; font-size: 10px;">
             <p style="text-align: center; font-size: 12px;">
                 <strong>ORMECO EMPLOYEES MULTI-PURPOSE COOPERATIVE (OREMPCO)</strong><br>
                 Sta. Isabel, Calapan City Oriental Mindoro<br>
                 CDA Resgistration No.: 9520-04002679<br>
                 NVAT-Exempt TIN: 004-175-226-000
             </p>
-            ====================================
+            <hr>
             <p><strong>Sales Order Number:</strong> ${poNumber}</p>
             <p><strong>Waterstation Staff:</strong> ${cashierName}</p>
             <p><strong>Date/Time:</strong> ${dateTime}</p>
-            ====================================
-            <table>
+            <hr>
+            <table style="width: 100%;">
                 <tr>
-                    <th>Item</th>
+                    <th style="text-align: left;">Item</th>
                     <th style="text-align: right;">Qty</th>
                     <th style="text-align: right;">Price</th>
                     <th style="text-align: right;">Sub-Total</th>
@@ -563,7 +563,7 @@ $(document).ready(function () {
 
     printContent += `
             </table>
-            ====================================
+            <hr>
             <p><strong>Total Items:</strong> <span style="float: right;">${totalItems}</span></p>
             <p><strong>Total Amount:</strong> <span style="float: right;">₱${totalAmount}</span></p>
             <p><strong>Payment Method:</strong> <span style="float: right;">${paymentMethod}</span></p>
@@ -582,7 +582,7 @@ $(document).ready(function () {
     }
 
     printContent += `
-            ====================================
+            <hr>
             <p style="text-align: center; font-size: 10px;">
                 This is your Sales Invoice
             </p>
@@ -596,23 +596,19 @@ $(document).ready(function () {
     printWindow.document.write('<html><head><title>Sales Invoice</title><style>');
     printWindow.document.write(`
         @media print {
-            body {
+            body, div {
                 font-family: Arial, sans-serif;
-                width: 57mm;
+                width: 100%;
                 margin: 0;
                 padding: 0;
-            }
-            div {
-                width: 57mm;
-                font-size: 10px;
             }
             table {
                 width: 100%;
                 border-collapse: collapse;
             }
             td, th {
-                text-align: left;
                 font-size: 10px;
+                padding: 2px 0;
             }
         }
     `);
