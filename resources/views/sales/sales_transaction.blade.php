@@ -417,22 +417,22 @@ function updateCartUI() {
     document.getElementById("total-amount").textContent = totalAmount.toFixed(2);
 }
 
-function changeItemNeededQty(productId, itemKey, change) {
+function changeItemNeededQty(productId, materialName, change) {
     let product = cart.find(item => item.id === productId);
-    if (product) {
-        let newQty = product.materials[itemKey] + change;
-        if (newQty < 1) newQty = 1; // Prevent materials from going below 1
 
-        product.materials[itemKey] = newQty;
+    if (product && product.materials.hasOwnProperty(materialName)) {
+        let newQty = product.materials[materialName] + change;
+        if (newQty < 0) newQty = 0; // Prevent negative values
 
-        // Ensure product qty matches the highest material count
-        let maxMaterialQty = Math.max(...Object.values(product.materials));
-        product.qty = maxMaterialQty;
-        product.subtotal = product.price * product.qty;
+        // Update the quantity in the cart object
+        product.materials[materialName] = newQty;
 
-        updateCartUI();
+        // Update the UI
+        let neededQtyElement = document.getElementById(`item-needed-${productId}-${materialName}`);
+        neededQtyElement.innerText = newQty;
     }
 }
+
 
 function changeQty(productId, change) {
     let product = cart.find(item => item.id === productId);
