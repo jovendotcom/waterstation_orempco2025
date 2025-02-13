@@ -260,7 +260,6 @@ $(document).ready(function () {
 
 // Cart handling
 let cart = []; // Array of objects { id, name, price, qty, subtotal, stock }
-
 function addToCart(productId, productName, productPrice, itemsNeededJson, stockAvailable) {
     console.log("Adding to cart:", { productId, productName, productPrice, itemsNeededJson, stockAvailable });
 
@@ -270,25 +269,37 @@ function addToCart(productId, productName, productPrice, itemsNeededJson, stockA
         return;
     }
 
-    // Parse items_needed JSON (if available)
+    // Parse items_needed JSON to get material names
     let itemsNeeded = itemsNeededJson ? JSON.parse(itemsNeededJson) : {};
+
+    // Transform itemsNeeded to map indexes to names
+    let materials = {};
+    for (let key in itemsNeeded) {
+        materials[itemsNeeded[key]] = 1; // Initialize material count as 1
+    }
 
     let product = cart.find(item => item.id === productId);
     let currentQtyInCart = product ? product.qty : 0;
-    let newQty = currentQtyInCart + 1; // Attempted new quantity
+    let newQty = currentQtyInCart + 1;
 
-    // Allow items with "N/A" stock to be added without restriction
     if (stockAvailable !== "N/A") {
         stockAvailable = parseInt(stockAvailable, 10);
         if (!isNaN(stockAvailable) && newQty > stockAvailable) {
             alert(`Insufficient stock for ${productName}. Available stock: ${stockAvailable}`);
-            return; // Stop adding if stock is exceeded
+            return;
         }
     }
 
     if (product) {
         product.qty = newQty;
         product.subtotal = product.price * product.qty;
+
+        // Update material quantities if stock is "N/A"
+        if (stockAvailable === "N/A") {
+            for (let materialName in product.materials) {
+                product.materials[materialName] = product.qty;
+            }
+        }
     } else {
         cart.push({
             id: productId,
@@ -296,14 +307,63 @@ function addToCart(productId, productName, productPrice, itemsNeededJson, stockA
             price: productPrice,
             qty: 1,
             subtotal: productPrice,
-            materials: itemsNeeded, // Store required materials
-            stock: stockAvailable // Store stock
+            materials: materials, // Use material names
+            stock: stockAvailable
         });
     }
 
     updateCartUI();
 }
 
+
+function updateCartUI() {
+    const cartSummaryElement = document.getElementById("cart-summary");
+    cartSummaryElement.innerHTML = ""; // Clear previous content
+
+    cart.forEach(product => {
+        const productRow = document.createElement("div");
+        productRow.classList.add("cart-row");
+
+        productRow.innerHTML = `
+            <div>${product.name}</div>
+            <div>Quantity: ${product.qty}</div>
+            <div>Subtotal: ₱${product.subtotal.toFixed(2)}</div>
+            <div>
+                Material(s) Needed:
+                <ul>
+                    ${Object.entries(product.materials).map(([material, qty]) => `
+                        <li>
+                            ${material}: 
+                            <button onclick="decreaseMaterial('${product.id}', '${material}')">-</button>
+                            ${qty}
+                            <button onclick="increaseMaterial('${product.id}', '${material}')">+</button>
+                        </li>
+                    `).join("")}
+                </ul>
+            </div>
+        `;
+
+        cartSummaryElement.appendChild(productRow);
+    });
+}
+
+function decreaseMaterial(productId, materialName) {
+    let product = cart.find(item => item.id === productId);
+    if (product && product.materials[materialName] > 1) {
+        product.materials[materialName]--;
+        product.qty--; // Match product quantity with material count
+        updateCartUI();
+    }
+}
+
+function increaseMaterial(productId, materialName) {
+    let product = cart.find(item => item.id === productId);
+    if (product) {
+        product.materials[materialName]++;
+        product.qty++; // Match product quantity with material count
+        updateCartUI();
+    }
+}
 
 
 function updateCartUI() {
@@ -319,24 +379,22 @@ function updateCartUI() {
 
         let materialsListHTML = "";
 
-            // Check if stock is N/A before displaying required materials
-            if (item.stock === "N/A" && Object.keys(item.materials).length > 0) {
-                for (let key in item.materials) {
-                    materialsListHTML += `
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span>${item.materials[key]}</span>
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <button class="btn btn-sm btn-danger" onclick="changeItemNeededQty(${item.id}, '${key}', -1)">-</button>
-                                <span id="item-needed-${item.id}-${key}">1</span>
-                                <button class="btn btn-sm btn-success" onclick="changeItemNeededQty(${item.id}, '${key}', 1)">+</button>
-                            </div>
+        if (item.stock === "N/A" && Object.keys(item.materials).length > 0) {
+            for (let materialName in item.materials) {
+                materialsListHTML += `
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>${materialName}:</span> <!-- Material Name -->
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <button class="btn btn-sm btn-danger" onclick="changeItemNeededQty(${item.id}, '${materialName}', -1)">-</button>
+                            <span id="item-needed-${item.id}-${materialName}" style="min-width: 30px; text-align: center;">${item.materials[materialName]}</span>
+                            <button class="btn btn-sm btn-success" onclick="changeItemNeededQty(${item.id}, '${materialName}', 1)">+</button>
                         </div>
-                    `;
-                }
-            } else {
-                materialsListHTML = `<span>None</span>`;
+                    </div>
+                `;
             }
-
+        } else {
+            materialsListHTML = `<span>None</span>`;
+        }
 
         let row = document.createElement("tr");
         row.innerHTML = `
@@ -360,26 +418,30 @@ function updateCartUI() {
 }
 
 function changeItemNeededQty(productId, itemKey, change) {
-    let neededQtyElement = document.getElementById(`item-needed-${productId}-${itemKey}`);
-    let currentQty = parseInt(neededQtyElement.innerText, 10);
-    
-    let newQty = currentQty + change;
-    if (newQty < 0) newQty = 0; // Prevent negative values
+    let product = cart.find(item => item.id === productId);
+    if (product) {
+        let newQty = product.materials[itemKey] + change;
+        if (newQty < 1) newQty = 1; // Prevent materials from going below 1
 
-    neededQtyElement.innerText = newQty;
+        product.materials[itemKey] = newQty;
+
+        // Ensure product qty matches the highest material count
+        let maxMaterialQty = Math.max(...Object.values(product.materials));
+        product.qty = maxMaterialQty;
+        product.subtotal = product.price * product.qty;
+
+        updateCartUI();
+    }
 }
-
-
-
 
 function changeQty(productId, change) {
     let product = cart.find(item => item.id === productId);
-    
+
     if (product) {
-        let stockAvailable = document.querySelector(`.buy-btn[data-id="${productId}"]`).dataset.stock; 
+        let stockAvailable = document.querySelector(`.buy-btn[data-id="${productId}"]`).dataset.stock;
         stockAvailable = parseInt(stockAvailable, 10); // Convert stock to integer
 
-        if (product.qty + change > stockAvailable) {
+        if (product.stock !== "N/A" && product.qty + change > stockAvailable) {
             alert(`Not enough stock available! Only ${stockAvailable} item(s) left.`);
             return; // Stop the function if stock is not enough
         }
@@ -388,11 +450,16 @@ function changeQty(productId, change) {
         if (product.qty <= 0) {
             cart = cart.filter(item => item.id !== productId);
         } else {
+            // Adjust all material quantities to match the new product quantity
+            for (let key in product.materials) {
+                product.materials[key] = product.qty;
+            }
             product.subtotal = product.price * product.qty;
         }
     }
     updateCartUI();
 }
+
 
 
 // Buy button event listener
