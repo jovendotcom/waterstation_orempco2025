@@ -82,7 +82,9 @@
                                 style="max-height: 150px; width: auto; margin: 0 auto; display: block;">
                             <div class="card-body">
                                 <h6 class="card-title">{{ $product->product_name }}</h6>
-                                <p class="card-text" style="color: green;">Stock Available: <span style="font-weight: bold">{{ $product->quantity ?? 'N/A'}}</span></p>
+                                <p class="card-text" style="font-weight: bold; color: {{ $product->quantity === 0 ? 'red' : 'green' }};">
+                                    Stock Available: <span>{{ $product->quantity ?? 'N/A' }}</span>
+                                </p>
                                 <p class="card-text" style="font-weight: bold; color: green;">Price: &#8369;{{ number_format($product->price, 2) }}</p>
                                 <form action="#" method="POST">
                                     @csrf
@@ -90,7 +92,9 @@
                                         data-id="{{ $product->id }}" 
                                         data-name="{{ $product->product_name }}" 
                                         data-price="{{ $product->price }}"
-                                        data-items-needed="{{ $product->items_needed }}">
+                                        data-stock="{{ $product->quantity ?? 'N/A' }}" 
+                                        data-items-needed="{{ $product->items_needed }}"
+                                        {{ $product->quantity === 0 ? 'disabled' : '' }}>
                                         Buy
                                     </button>
                                 </form>
@@ -255,10 +259,10 @@ $(document).ready(function () {
 });
 
 // Cart handling
-let cart = []; // Array of objects { id, name, price, qty, subtotal }
+let cart = []; // Array of objects { id, name, price, qty, subtotal, stock }
 
-function addToCart(productId, productName, productPrice, itemsNeededJson) {
-    console.log("Adding to cart:", { productId, productName, productPrice, itemsNeededJson });
+function addToCart(productId, productName, productPrice, itemsNeededJson, stockAvailable) {
+    console.log("Adding to cart:", { productId, productName, productPrice, itemsNeededJson, stockAvailable });
 
     if (!productId || !productName || isNaN(productPrice) || productPrice <= 0) {
         console.error("Invalid product data", { productId, productName, productPrice });
@@ -270,9 +274,20 @@ function addToCart(productId, productName, productPrice, itemsNeededJson) {
     let itemsNeeded = itemsNeededJson ? JSON.parse(itemsNeededJson) : {};
 
     let product = cart.find(item => item.id === productId);
+    let currentQtyInCart = product ? product.qty : 0;
+    let newQty = currentQtyInCart + 1; // Attempted new quantity
+
+    // Allow items with "N/A" stock to be added without restriction
+    if (stockAvailable !== "N/A") {
+        stockAvailable = parseInt(stockAvailable, 10);
+        if (!isNaN(stockAvailable) && newQty > stockAvailable) {
+            alert(`Insufficient stock for ${productName}. Available stock: ${stockAvailable}`);
+            return; // Stop adding if stock is exceeded
+        }
+    }
 
     if (product) {
-        product.qty++;
+        product.qty = newQty;
         product.subtotal = product.price * product.qty;
     } else {
         cart.push({
@@ -281,11 +296,14 @@ function addToCart(productId, productName, productPrice, itemsNeededJson) {
             price: productPrice,
             qty: 1,
             subtotal: productPrice,
-            materials: itemsNeeded // Store required materials
+            materials: itemsNeeded, // Store required materials
+            stock: stockAvailable // Store stock
         });
     }
+
     updateCartUI();
 }
+
 
 
 function updateCartUI() {
@@ -355,7 +373,16 @@ function changeItemNeededQty(productId, itemKey, change) {
 
 function changeQty(productId, change) {
     let product = cart.find(item => item.id === productId);
+    
     if (product) {
+        let stockAvailable = document.querySelector(`.buy-btn[data-id="${productId}"]`).dataset.stock; 
+        stockAvailable = parseInt(stockAvailable, 10); // Convert stock to integer
+
+        if (product.qty + change > stockAvailable) {
+            alert(`Not enough stock available! Only ${stockAvailable} item(s) left.`);
+            return; // Stop the function if stock is not enough
+        }
+
         product.qty += change;
         if (product.qty <= 0) {
             cart = cart.filter(item => item.id !== productId);
@@ -365,6 +392,7 @@ function changeQty(productId, change) {
     }
     updateCartUI();
 }
+
 
 // Buy button event listener
 document.addEventListener("DOMContentLoaded", function () {
@@ -377,16 +405,17 @@ document.addEventListener("DOMContentLoaded", function () {
             const productName = this.dataset.name;
             const productPrice = parseFloat(this.dataset.price);
             const itemsNeeded = this.dataset.itemsNeeded; // Get items_needed JSON
+            let stockAvailable = this.dataset.stock; // Get stock (can be "N/A")
 
-            console.log("Parsed Values:", { productId, productName, productPrice, itemsNeeded });
+            console.log("Parsed Values:", { productId, productName, productPrice, itemsNeeded, stockAvailable });
 
             if (Number.isNaN(productId) || productId <= 0 || !productName || Number.isNaN(productPrice) || productPrice <= 0) {
-                console.error("Invalid product data", { productId, productName, productPrice });
+                console.error("Invalid product data", { productId, productName, productPrice, stockAvailable });
                 alert("Invalid product data! Check the console (F12).");
                 return;
             }
 
-            addToCart(productId, productName, productPrice, itemsNeeded);
+            addToCart(productId, productName, productPrice, itemsNeeded, stockAvailable);
         });
     });
 });

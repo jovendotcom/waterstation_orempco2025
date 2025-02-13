@@ -87,8 +87,7 @@
                             <td>{{ $product->quantity ?? 'N/A' }}</td>
                             <td>{{ number_format($product->price, 2) }}</td>
                             <td>
-                                <button class="btn btn-primary btn-sm">Update</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
+                                <button class="btn btn-primary btn-sm">Add Stock</button>
                             </td>
                         </tr>
                     @empty
