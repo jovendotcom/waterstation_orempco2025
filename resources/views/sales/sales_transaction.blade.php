@@ -319,23 +319,24 @@ function updateCartUI() {
 
         let materialsListHTML = "";
 
-        // Check if there are required materials
-        if (Object.keys(item.materials).length > 0) {
-            for (let key in item.materials) {
-                materialsListHTML += `
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <span>${item.materials[key]}</span>
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            <button class="btn btn-sm btn-danger" onclick="changeItemNeededQty(${item.id}, '${key}', -1)">-</button>
-                            <span id="item-needed-${item.id}-${key}">1</span>
-                            <button class="btn btn-sm btn-success" onclick="changeItemNeededQty(${item.id}, '${key}', 1)">+</button>
+            // Check if stock is N/A before displaying required materials
+            if (item.stock === "N/A" && Object.keys(item.materials).length > 0) {
+                for (let key in item.materials) {
+                    materialsListHTML += `
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span>${item.materials[key]}</span>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <button class="btn btn-sm btn-danger" onclick="changeItemNeededQty(${item.id}, '${key}', -1)">-</button>
+                                <span id="item-needed-${item.id}-${key}">1</span>
+                                <button class="btn btn-sm btn-success" onclick="changeItemNeededQty(${item.id}, '${key}', 1)">+</button>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
+            } else {
+                materialsListHTML = `<span>None</span>`;
             }
-        } else {
-            materialsListHTML = `<span>None</span>`;
-        }
+
 
         let row = document.createElement("tr");
         row.innerHTML = `
@@ -419,7 +420,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
-
 
 // Function to refresh the PO number after a successful transaction
 function refreshPoNumber() {
