@@ -15,9 +15,24 @@ use App\Models\UserLog;
 use App\Models\SalesTransaction;
 use App\Models\SalesItem;
 use Session;
+use App\Models\MaterialRequirement;
 
 class SalesController extends Controller
 {
+    public function getMaterialRequirement($productId, $materialId)
+    {
+        try {
+            $requirement = MaterialRequirement::where('product_id', $productId)
+                ->where('material_id', $materialId)
+                ->first();
+
+            return $requirement ? $requirement->quantity_needed : 1; // Default to 1 if not found
+        } catch (\Exception $e) {
+            \Log::error("Error fetching material requirement: " . $e->getMessage());
+            return 1;
+        }
+    }
+
     public function saleslogin()
     {
         return view("sales.saleslogin");
@@ -124,7 +139,6 @@ class SalesController extends Controller
 
     public function store(Request $request)
     {
-        // Debugging - log request data
         \Log::info('Sales transaction request:', $request->all());
     
         $request->validate([
@@ -135,7 +149,6 @@ class SalesController extends Controller
             'cart' => 'required|array',
         ]);
     
-        // Ensure cart has valid product data
         foreach ($request->cart as $item) {
             if (!isset($item['id'], $item['name'], $item['qty'], $item['price'], $item['subtotal'])) {
                 return response()->json([
@@ -148,10 +161,8 @@ class SalesController extends Controller
         try {
             DB::beginTransaction();
     
-            // Determine remarks based on payment method
             $remarks = $request->payment_method === 'cash' ? 'Paid' : 'Not Paid';
     
-            // Create sales transaction
             $sale = SalesTransaction::create([
                 'po_number' => $request->po_number,
                 'customer_id' => $request->customer_id,
@@ -162,62 +173,53 @@ class SalesController extends Controller
                 'change_amount' => $request->change_amount ?? null,
                 'credit_payment_method' => $request->charge_to ?? null,
                 'total_items' => $request->total_items,
-                'remarks' => $remarks, // Set remarks dynamically
+                'remarks' => $remarks,
             ]);
     
-            // Process each item in the cart
+            $errorMessages = [];
+    
             foreach ($request->cart as $item) {
                 $product = ProductForSale::find($item['id']);
                 $quantityPurchased = $item['qty'];
     
                 if ($product) {
-                    // Check if product has stock in 'products_for_sale'
-                    if (!is_null($product->quantity) && $product->quantity > 0) {
-                        // If stock available in 'products_for_sale', deduct from there
-                        if ($product->quantity >= $quantityPurchased) {
-                            // Deduct from the product's stock in 'products_for_sale'
-                            $product->quantity -= $quantityPurchased;
-                            $product->save();
-                        } else {
-                            // Insufficient stock in 'products_for_sale', return error
+                    if (!empty($product->items_needed)) {
+                        $itemsNeeded = json_decode($product->items_needed, true);
+    
+                        if (!is_array($itemsNeeded)) {
                             return response()->json([
                                 'success' => false,
-                                'message' => "Insufficient stock for {$product->product_name}.",
-                                'available_stock' => $product->quantity,
+                                'message' => "Invalid format for items_needed in {$product->product_name}.",
                             ], 422);
                         }
-                    } else {
-                        // If stock is NULL or 0, check in 'StocksCount' and deduct from there
-                        if (!empty($product->items_needed)) {
-                            $itemsNeeded = json_decode($product->items_needed, true); // Convert JSON to array
-                            $errorMessages = [];
     
-                            foreach ($itemsNeeded as $neededItemId => $neededItemName) {
-                                $neededStock = StocksCount::where('item_name', $neededItemName)->first();
+                        foreach ($itemsNeeded as $neededItemId => $neededItemName) {
+                            // ✅ Hanapin ang tamang material sa `StocksCount`
+                            $material = StocksCount::where('item_name', $neededItemName)->first();
     
-                                if ($neededStock && $neededStock->quantity >= $quantityPurchased) {
-                                    // Deduct from the needed item's stock in 'StocksCount'
-                                    $neededStock->quantity -= $quantityPurchased;
-                                    $neededStock->save();
-                                    break; // Stop once we successfully deducted
-                                } else {
-                                    // Track missing items if insufficient stock
-                                    $errorMessages[] = "{$neededItemName} is out of stock. Available: " . ($neededStock ? $neededStock->quantity : 0);
-                                }
-                            }
-    
-                            // If any item_needed is missing, show an error
-                            if (count($errorMessages) > 0) {
+                            if (!$material) {
                                 return response()->json([
                                     'success' => false,
-                                    'message' => "Transaction failed due to insufficient stock for the following items: " . implode(', ', $errorMessages),
+                                    'message' => "Material '{$neededItemName}' not found in stock.",
                                 ], 422);
+                            }
+    
+                            // ✅ KUNIN ANG TAMANG QUANTITY NG MATERIAL MULA SA FRONTEND CART
+                            $materialQtyNeeded = $item['materials'][$neededItemName] ?? 1; // Get displayed quantity
+    
+                            // ✅ Check stock availability at ibawas ang tamang quantity
+                            if ($material->quantity >= $materialQtyNeeded) {
+                                $material->quantity -= $materialQtyNeeded;
+                                $material->save();
+                            } else {
+                                // Kulang ang stock, mag-error
+                                $availableQty = $material->quantity;
+                                $errorMessages[] = "{$neededItemName} is out of stock. Needed: $materialQtyNeeded, Available: $availableQty";
                             }
                         }
                     }
                 }
     
-                // Insert into SalesItem table
                 SalesItem::create([
                     'sales_transaction_id' => $sale->id,
                     'product_id' => $item['id'],
@@ -226,6 +228,15 @@ class SalesController extends Controller
                     'price' => $item['price'],
                     'subtotal' => $item['subtotal'],
                 ]);
+            }
+    
+            // ❌ CANCEL TRANSACTION KUNG MAY KULANG NA MATERIALS
+            if (!empty($errorMessages)) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Transaction failed due to insufficient stock: " . implode(', ', $errorMessages),
+                ], 422);
             }
     
             DB::commit();
@@ -246,14 +257,13 @@ class SalesController extends Controller
     }
     
     
-    
     public function salesHistory(Request $request)
     {
-        $sales = SalesTransaction::with('customer')->get(); // Eager load customer
-    
+        // Eager load the customer and sales_items relationships
+        $sales = SalesTransaction::with(['customer', 'salesItems'])->get();
+        
         return view('sales.sales_history', compact('sales'));
-    }
-    
+    }    
     
     
     public function customerList()

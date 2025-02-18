@@ -39,5 +39,12 @@ class SalesTransaction extends Model
     {
         return $this->hasMany(SalesItem::class);
     }
+
+    // SalesTransaction.php
+    public function salesItems()
+    {
+        return $this->hasMany(SalesItem::class, 'sales_transaction_id');
+    }
+
 }
 

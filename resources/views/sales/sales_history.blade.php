@@ -29,37 +29,95 @@
         </div>
     @endif
 
+<table id="datatablesSimple" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>SO Date</th>
+            <th>SO Number</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($sales as $sale)
+            <tr>
+                <td>{{ $sale->created_at->format('m-d-Y h:i:s a') }}</td>
+                <td>{{ $sale->po_number }}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm view-sale" 
+                            data-so-date="{{ $sale->created_at->format('m-d-Y h:i:s a') }}" 
+                            data-so-number="{{ $sale->po_number }}" 
+                            data-items="{{ json_encode($sale->salesItems) }}" 
+                            data-bs-toggle="modal" data-bs-target="#salesHistoryModal">
+                        <i class="fa-solid fa-eye"></i> View
+                    </button>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
 
 
-    <div class="card mb-4" style="box-shadow: 12px 12px 7px rgba(0, 0, 0, 0.3);">
-        <div class="card-header">
-            <i class="fas fa-table me-1"></i>
-            Sales History
-        </div>
-        <div class="card-body">
-            <table id="datatablesSimple" class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>SO Date</th>
-                        <th>SO Number</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($sales as $sale)
-                        <tr>
-                            <td>{{ $sale->created_at->format('m-d-Y h:i:s a') }}</td>
-                            <td>{{ $sale->po_number }}</td>
-                            <td>
-                                <a href="#" class="btn btn-primary btn-sm">
-                                    <i class="fa-solid fa-eye"></i> View
-                                </a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+<!-- Sales History Modal -->
+<div class="modal fade" id="salesHistoryModal" tabindex="-1" aria-labelledby="salesHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="salesHistoryModalLabel">Sales Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>SO Date:</strong> <span id="modalSoDate"></span></p>
+                <p><strong>SO Number:</strong> <span id="modalSoNumber"></span></p>
+
+                <!-- Add a section for the items -->
+                <h5>Items:</h5>
+                <ul id="modalItemList">
+                    <!-- Items will be populated here -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
+</div>
+
+<!-- JavaScript for Handling Modal Data -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".view-sale").forEach(button => {
+        button.addEventListener("click", function() {
+            const saleItems = this.getAttribute("data-items"); // Get items from data attribute
+            console.log("Sale items data:", saleItems); // Debugging line
+
+            // Set SO date and number
+            document.getElementById("modalSoDate").textContent = this.getAttribute("data-so-date");
+            document.getElementById("modalSoNumber").textContent = this.getAttribute("data-so-number");
+
+            // Clear the items list
+            const itemList = document.getElementById("modalItemList");
+            itemList.innerHTML = '';
+
+            // Parse the items (assuming it's a JSON string)
+            try {
+                const items = JSON.parse(saleItems);
+                console.log("Parsed items:", items); // Debugging line
+
+                // Populate the items list
+                items.forEach(item => {
+                    const li = document.createElement("li");
+                    li.textContent = `${item.product_name} - ${item.quantity} x ${item.price} = ${item.subtotal}`;
+                    itemList.appendChild(li);
+                });
+            } catch (e) {
+                console.error("Error parsing items:", e); // Error in case JSON is malformed
+            }
+        });
+    });
+});
+
+</script>
+
+
 
 @endsection

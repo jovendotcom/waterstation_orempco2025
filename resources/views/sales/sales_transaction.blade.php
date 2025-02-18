@@ -74,12 +74,25 @@
                 <div class="row row-cols-1 row-cols-md-3 g-4">
                     @foreach($products as $product)
                     <div class="col">
-                        <div class="card h-100">
+                        <div class="card h-100 position-relative" style="overflow: hidden; box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2); border-radius: 10px;">
+                            <!-- Out of Stock Overlay -->
+                            @if($product->quantity === 0)
+                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                                        background: rgba(255, 255, 255, 0.7); /* Transparent White */
+                                        color: red; font-size: 30px; font-weight: 900; 
+                                        display: flex; align-items: center; justify-content: center;
+                                        text-transform: uppercase; letter-spacing: 2px;
+                                        text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);">
+                                OUT OF STOCK
+                            </div>
+                            @endif
+
                             <!-- Display Product Image -->
                             <img src="{{ $product->product_image ? asset('storage/' . $product->product_image) : asset('images/placeholder.png') }}" 
                                 class="card-img-top" 
                                 alt="{{ $product->product_name }}" 
-                                style="max-height: 150px; width: auto; margin: 0 auto; display: block;">
+                                style="max-height: 150px; width: auto; margin: 0 auto; display: block; border-radius: 10px 10px 0 0;">
+
                             <div class="card-body">
                                 <h6 class="card-title">{{ $product->product_name }}</h6>
                                 <p class="card-text" style="font-weight: bold; color: {{ $product->quantity === 0 ? 'red' : 'green' }};">
