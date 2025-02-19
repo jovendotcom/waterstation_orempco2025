@@ -57,7 +57,7 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="stockTableBody">
                     @foreach ($stocks as $stock)
                         <tr>
                             <td>{{ $stock->item_name }}</td>
@@ -162,6 +162,24 @@
             setTimeout(() => {
                 quantityInput.focus();
             }, 500); // Delay to ensure modal animation completes
+        });
+
+        // Initialize MutationObserver
+        const stockTableBody = document.getElementById('stockTableBody');
+
+        const observer = new MutationObserver((mutationsList, observer) => {
+            mutationsList.forEach(mutation => {
+                if (mutation.type === 'childList') {
+                    console.log('Table content changed. New stock row added or updated.');
+                    // You can add additional code to handle updates if needed
+                }
+            });
+        });
+
+        // Observe the table body for changes in child elements (rows added/removed)
+        observer.observe(stockTableBody, {
+            childList: true, // Watch for added/removed nodes
+            subtree: true     // Watch the entire subtree (all child nodes)
         });
     });
 </script>

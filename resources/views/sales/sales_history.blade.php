@@ -46,7 +46,7 @@
                     <button class="btn btn-primary btn-sm view-sale" 
                             data-so-date="{{ $sale->created_at->format('m-d-Y h:i:s a') }}" 
                             data-so-number="{{ $sale->po_number }}" 
-                            data-items="{{ json_encode($sale->salesItems) }}" 
+                            data-items='@json($sale->salesItems)' 
                             data-bs-toggle="modal" data-bs-target="#salesHistoryModal">
                         <i class="fa-solid fa-eye"></i> View
                     </button>
@@ -84,37 +84,64 @@
 
 <!-- JavaScript for Handling Modal Data -->
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+// Function to handle button clicks and populate the modal
+function setupSaleButtons() {
     document.querySelectorAll(".view-sale").forEach(button => {
-        button.addEventListener("click", function() {
-            const saleItems = this.getAttribute("data-items"); // Get items from data attribute
-            console.log("Sale items data:", saleItems); // Debugging line
+        button.addEventListener("click", function () {
+            const saleItems = this.getAttribute("data-items");
+            console.log("Sale items raw data:", saleItems); // Debugging
 
-            // Set SO date and number
-            document.getElementById("modalSoDate").textContent = this.getAttribute("data-so-date");
-            document.getElementById("modalSoNumber").textContent = this.getAttribute("data-so-number");
-
-            // Clear the items list
-            const itemList = document.getElementById("modalItemList");
-            itemList.innerHTML = '';
-
-            // Parse the items (assuming it's a JSON string)
             try {
                 const items = JSON.parse(saleItems);
-                console.log("Parsed items:", items); // Debugging line
+                console.log("Parsed items:", items); // Debugging
 
-                // Populate the items list
+                // Set SO date and number
+                document.getElementById("modalSoDate").textContent = this.getAttribute("data-so-date");
+                document.getElementById("modalSoNumber").textContent = this.getAttribute("data-so-number");
+
+                // Clear the list
+                const itemList = document.getElementById("modalItemList");
+                itemList.innerHTML = '';
+
+                if (items.length === 0) {
+                    itemList.innerHTML = '<li>No items found</li>';
+                    return;
+                }
+
+                // Append items
                 items.forEach(item => {
                     const li = document.createElement("li");
                     li.textContent = `${item.product_name} - ${item.quantity} x ${item.price} = ${item.subtotal}`;
                     itemList.appendChild(li);
                 });
+
             } catch (e) {
-                console.error("Error parsing items:", e); // Error in case JSON is malformed
+                console.error("Error parsing items:", e);
+                document.getElementById("modalItemList").innerHTML = '<li>Error loading items</li>';
             }
         });
     });
+}
+
+// Observe changes to the table body
+const observer = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+        if (mutation.type === "childList") {
+            console.log("Table data changed. Re-attaching event listeners...");
+            setupSaleButtons(); // Re-bind event listeners to new elements
+        }
+    }
 });
+
+// Start observing the table body for changes
+const tableBody = document.querySelector("#datatablesSimple tbody");
+if (tableBody) {
+    observer.observe(tableBody, { childList: true, subtree: true });
+}
+
+// Run the function initially in case there are already rows
+setupSaleButtons();
+
 
 </script>
 
