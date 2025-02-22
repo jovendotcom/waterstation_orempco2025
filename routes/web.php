@@ -57,6 +57,8 @@ Route::prefix('sales')->group(function () {
 
         Route::GET('/saleshistory', [SalesController::class, 'salesHistory'])->name('sales.salesHistory');
 
+        Route::GET('/salesreport', [SalesController::class, 'getReports'])->name('sales.sales_report');
+
         Route::post('/customers', [CustomerListController::class, 'store'])->name('customers.store');
         Route::get('/get-departments', [CustomerListController::class, 'getDepartments']);//this is to show the departments in the dropdown
 

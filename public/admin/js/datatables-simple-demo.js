@@ -4,7 +4,7 @@ window.addEventListener('DOMContentLoaded', event => {
         new simpleDatatables.DataTable(datatablesSimple, {
             searchable: true,  // Enable/disable searching
             fixedHeight: false, // Fix the height of the table
-            perPage: 7,       // Number of rows per page
+            perPage: 10,       // Number of rows per page
             perPageSelect: [5, 7, 10, 15, 20],  // Options for rows per page selection
             labels: {
                 placeholder: "Search...", // Placeholder text for search input

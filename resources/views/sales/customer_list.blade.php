@@ -105,11 +105,15 @@
                         <label class="form-label">Type of Customer</label>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="type" id="editTypeEmployee" value="Employee" disabled>
-                            <label class="form-check-label" for="editTypeEmployee">Member</label>
+                            <label class="form-check-label" for="editTypeEmployee">Employee</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="type" id="editTypeDepartment" value="Department" disabled>
                             <label class="form-check-label" for="editTypeDepartment">Department</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="type" id="editTypeOutside" value="Outside" disabled>
+                            <label class="form-check-label" for="editTypeDepartment">Outside Customer</label>
                         </div>
                     </div>
 
@@ -207,11 +211,15 @@
                         <label class="form-label">Type of Customer</label>
                         <div class="form-check">
                             <input class="form-check-input @error('type') is-invalid @enderror" type="radio" name="type" id="typeEmployee" value="Employee" {{ old('type', 'Employee') == 'Employee' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="typeEmployee">Member</label>
+                            <label class="form-check-label" for="typeEmployee">Employee</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input @error('type') is-invalid @enderror" type="radio" name="type" id="typeDepartment" value="Department" {{ old('type') == 'Department' ? 'checked' : '' }}>
                             <label class="form-check-label" for="typeDepartment">Department</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="type" id="editTypeOutside" value="Outside" {{ old('type') == 'Outside' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="editTypeDepartment">Outside Customer</label>
                         </div>
                         @error('type')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -232,8 +240,8 @@
                     <!-- Employee Fields -->
                     <div id="employeeFields" class="d-none">
                         <div class="mb-3">
-                            <label for="employeeId" class="form-label">Member ID</label>
-                            <input type="text" class="form-control @error('employee_id') is-invalid @enderror" id="employeeId" name="employee_id" placeholder="Enter member ID" value="{{ old('employee_id') }}">
+                            <label for="employeeId" class="form-label">Employee ID</label>
+                            <input type="text" class="form-control @error('employee_id') is-invalid @enderror" id="employeeId" name="employee_id" placeholder="Enter employee ID" value="{{ old('employee_id') }}">
                             @error('employee_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

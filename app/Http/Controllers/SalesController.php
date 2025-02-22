@@ -275,4 +275,9 @@ class SalesController extends Controller
         
         return view('sales.customer_list', compact('customers', 'departments'));
     }
+
+    public function getReports()
+    {
+        return view("sales.sales_report");
+    }
 }

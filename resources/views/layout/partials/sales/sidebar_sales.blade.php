@@ -44,10 +44,26 @@
                 Customers List
             </a>
 
-            <a class="nav-link text-white">
-                <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-book"></i></div>
+            <!-- Reports Dropdown -->
+            <a class="nav-link collapsed text-white
+                {{ request()->routeIs('sales.sales_report') ? 'active' : '' }}" 
+                href="#" data-bs-toggle="collapse" 
+                data-bs-target="#collapseReports" 
+                aria-expanded="{{ request()->routeIs('sales.sales_report') ? 'true' : 'false' }}" 
+                aria-controls="collapseReports">
+                <div class="sb-nav-link-icon text-white"><i class="fa-regular fa-file"></i></div>
                 Reports
+                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down text-white"></i></div>
             </a>
+            
+            <div class="collapse {{ request()->routeIs('sales.sales_report') ? 'show' : '' }}" id="collapseReports" aria-labelledby="headingReports" data-bs-parent="#sidenavAccordion">
+                <nav class="sb-sidenav-menu-nested">
+                    <a class="nav-link text-white {{ request()->routeIs('sales.sales_report') ? 'active' : '' }}" href="{{ route('sales.sales_report') }}">
+                        <div class="sb-nav-link-icon text-white"><i class="fas fa-dollar-sign"></i></div>
+                        Sales Report
+                    </a>
+                </nav>
+            </div>
 
             <a class="nav-link text-white">
                 <div class="sb-nav-link-icon text-white"><i class="fa-regular fa-user"></i></div>
