@@ -144,10 +144,10 @@ class CustomerListController extends Controller
         $customers = Customer::all();
 
         if ($format === 'excel') {
-            return Excel::download(new CustomersExport($customers), 'customers.xlsx');
+            return Excel::download(new CustomersExport($customers), 'orempco_waterstation_customers_list.xlsx');
         } elseif ($format === 'pdf') {
             $pdf = PDF::loadView('exports.customers', compact('customers'));
-            return $pdf->download('customers.pdf');
+            return $pdf->download('orempco_waterstation_customers_list.pdf');
         }
 
         return redirect()->back()->with('error', 'Invalid export format.');
