@@ -45,12 +45,20 @@
 </head>
 <body>
     <!-- Header for First Page Only -->
-    <div class="header">
-        <h2>ORMECO EMPLOYEES MULTI-PURPOSE COOPERATIVE (OREMPCO)</h2>
-        <h4>Sta. Isabel, Calapan City, Oriental Mindoro</h4>
-        <h4>CDA Registration No.: 9520-04002679</h4>
-        <h4>NVAT-Exempt TIN: 004-175-226-000</h4>
-        <h3 style="margin-top: 20px;">Customer List</h3>
+    <div class="header" style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+        <!-- Logo -->
+        <div>
+            <img src="{{ ('images/orempcologo.png') }}" alt="OREMPCO Logo" style="width: 80px; height: auto;">
+        </div>
+
+        <!-- Title and Details -->
+        <div style="text-align: center;">
+            <h2>ORMECO EMPLOYEES MULTI-PURPOSE COOPERATIVE (OREMPCO)</h2>
+            <h4>Sta. Isabel, Calapan City, Oriental Mindoro</h4>
+            <h4>CDA Registration No.: 9520-04002679</h4>
+            <h4>NVAT-Exempt TIN: 004-175-226-000</h4>
+            <h3 style="margin-top: 20px;">Customer List</h3>
+        </div>
     </div>
 
     <!-- Customer Table -->

@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing; // ✅ Import Drawing class
 use Maatwebsite\Excel\Events\AfterSheet;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,16 +21,11 @@ class CustomersExport implements FromArray, WithHeadings, WithTitle, WithStyles,
      */
     public function array(): array
     {
-        // Fetch all customers and group them by 'type' (Department, Employee, Outside)
         $customers = Customer::all();
-
-        // Define type order
         $typeOrder = ['Department', 'Employee', 'Outside'];
-
         $exportData = [];
 
         foreach ($typeOrder as $type) {
-            // Filter and sort customers by full_name within the current type
             $filtered = $customers->where('type', $type)->sortBy('full_name');
 
             foreach ($filtered as $customer) {
@@ -42,13 +38,11 @@ class CustomersExport implements FromArray, WithHeadings, WithTitle, WithStyles,
                 ];
             }
 
-            // Add blank row after each type if there were any customers
             if ($filtered->isNotEmpty()) {
                 $exportData[] = ['', '', '', '', ''];
             }
         }
 
-        // Remove last blank row if present
         if (!empty($exportData) && empty(array_filter(end($exportData)))) {
             array_pop($exportData);
         }
@@ -66,9 +60,9 @@ class CustomersExport implements FromArray, WithHeadings, WithTitle, WithStyles,
             ['Sta. Isabel, Calapan City, Oriental Mindoro'],
             ['CDA Registration No.: 9520-04002679'],
             ['NVAT-Exempt TIN: 004-175-226-000'],
-            [''], // Blank row for spacing
-            ['Customer List'], // Title row
-            ['EMPLOYEE ID', 'FULL NAME', 'DEPARTMENT', 'TYPE', 'MEMBER/NON-MEMBER'], // Headers
+            [''], 
+            ['Customer List'],
+            ['EMPLOYEE ID', 'FULL NAME', 'DEPARTMENT', 'TYPE', 'MEMBER/NON-MEMBER'],
         ];
     }
 
@@ -96,13 +90,25 @@ class CustomersExport implements FromArray, WithHeadings, WithTitle, WithStyles,
             4 => ['font' => ['size' => 12, 'name' => 'Arial'], 'alignment' => ['horizontal' => 'center']],
             // Style the Customer List title
             6 => ['font' => ['bold' => true, 'size' => 16, 'name' => 'Arial'], 'alignment' => ['horizontal' => 'center']],
-            // Style the header row
-            7 => ['font' => ['bold' => true, 'name' => 'Arial'], 'alignment' => ['horizontal' => 'center'], 'borders' => ['bottom' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THICK]]],
+            // ✅ Style the table header row with yellow background
+            7 => [
+                'font' => ['bold' => true, 'name' => 'Arial'],
+                'alignment' => ['horizontal' => 'center'],
+                'borders' => [
+                    'bottom' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THICK],
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'FFFF00'], // ✅ Yellow background
+                ],
+            ],
         ];
     }
 
+
+
     /**
-     * Apply borders, font, freeze header, auto-sizing, and padding.
+     * Apply borders, images, footer, and more.
      */
     public function registerEvents(): array
     {
@@ -110,62 +116,58 @@ class CustomersExport implements FromArray, WithHeadings, WithTitle, WithStyles,
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                // Merge cells for each of the header lines
+                // ✅ Merge header cells
                 foreach (range(1, 6) as $row) {
                     $sheet->mergeCells("A{$row}:E{$row}");
                 }
 
-                // Freeze the header row (after Customer List title and table headers)
-                $sheet->freezePane('A8'); // Data scrolls, headers stay
+                // ✅ Freeze header
+                $sheet->freezePane('A8');
 
-                // Apply border to all data cells
+                // ✅ Apply borders and styles
                 $lastRow = $sheet->getHighestRow();
                 $lastColumn = $sheet->getHighestColumn();
-
                 $cellRange = 'A7:' . $lastColumn . $lastRow;
 
-                // Apply borders, Arial 11 font, and padding
                 $sheet->getStyle($cellRange)->applyFromArray([
-                    'font' => [
-                        'name' => 'Arial',
-                        'size' => 11,
-                    ],
+                    'font' => ['name' => 'Arial', 'size' => 11],
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                            'color' => ['argb' => '000000'], // Black borders
+                            'color' => ['argb' => '000000'],
                         ],
                     ],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
                         'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-                        'indent' => 1, // Add padding inside the cell
+                        'indent' => 1,
                     ],
                 ]);
 
-                // Add footer with Generated On and Generated By
-                $generatedOn = now()->format('F d, Y'); // Example: February 20, 2025
-                $generatedBy = Auth::guard('sales')->user()->full_name  ?? 'System'; // Fallback if user not authenticated
+                // ✅ Add Footer
+                $generatedOn = now()->format('F d, Y');
+                $generatedBy = Auth::guard('sales')->user()->full_name ?? 'System';
+                $footerRow = $lastRow + 3;
 
-                // Set footer details in cells
-                $footerRow = $lastRow + 3; // Adding some space before footer
                 $sheet->setCellValue("D{$footerRow}", "Generation Date:");
                 $sheet->setCellValue("E{$footerRow}", $generatedOn);
-
                 $sheet->setCellValue("D" . ($footerRow + 1), "Generated by:");
                 $sheet->setCellValue("E" . ($footerRow + 1), $generatedBy);
 
-                // Style footer (italic and right-aligned)
                 $sheet->getStyle("D{$footerRow}:E" . ($footerRow + 1))->applyFromArray([
-                    'font' => [
-                        'italic' => true,
-                        'name' => 'Arial',
-                        'size' => 11,
-                    ],
-                    'alignment' => [
-                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT,
-                    ],
+                    'font' => ['italic' => true, 'name' => 'Arial', 'size' => 11],
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT],
                 ]);
+
+                // ✅ Add Logo Image
+                $drawing = new Drawing();
+                $drawing->setName('OREMPCO Logo');
+                $drawing->setDescription('Company Logo');
+                $drawing->setPath(public_path('images/orempcologo.png')); // ✅ Path to your logo image
+                $drawing->setHeight(80); // Adjust height
+                $drawing->setCoordinates('A1'); // Place logo at A1
+                $drawing->setOffsetX(10); // Optional: Adjust X offset
+                $drawing->setWorksheet($sheet);
             },
         ];
     }
