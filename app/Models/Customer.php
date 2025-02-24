@@ -26,5 +26,6 @@ class Customer extends Model
         'department',
         'employee_id',
         'type',
+        'membership_status',
     ];
 }

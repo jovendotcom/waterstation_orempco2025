@@ -60,10 +60,13 @@ Route::prefix('sales')->group(function () {
         Route::GET('/salesreport', [SalesController::class, 'getReports'])->name('sales.sales_report');
 
         Route::post('/customers', [CustomerListController::class, 'store'])->name('customers.store');
+        Route::post('/customers/outside', [CustomerListController::class, 'storeOutside'])->name('customers.storeOutside');
         Route::get('/get-departments', [CustomerListController::class, 'getDepartments']);//this is to show the departments in the dropdown
 
         Route::put('customers/{id}', [CustomerListController::class, 'update'])->name('customers.update');
         Route::delete('customers/{id}', [CustomerListController::class, 'destroy'])->name('customers.destroy');
+
+        Route::get('/customers/export/{format}', [CustomerListController::class, 'export'])->name('customers.export');
 
 
         Route::GET('/productInventory', [ProductInventoryController::class, 'productInventory'])->name('sales.productInventory');
