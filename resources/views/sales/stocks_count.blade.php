@@ -34,13 +34,25 @@
         <div>
             <!-- You can place a search bar here if needed -->
         </div>
-        <div>
+        <div class="d-flex gap-2">
+            <!-- Export Dropdown -->
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-export me-1"></i> Export Stocks Count
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href=" {{ route('stocks.export', ['format' => 'excel']) }} "><i class="fas fa-file-excel me-1"></i> Export as Excel</a></li>
+                    <li><a class="dropdown-item" href=" {{ route('stocks.export', ['format' => 'pdf']) }} "><i class="fas fa-file-pdf me-1"></i> Export as PDF</a></li>
+                </ul>
+            </div>
+
             <!-- Add New Stock Button -->
             <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addStockModal">
                 <i class="fa-solid fa-faucet"></i> Add New Stocks
             </button>            
         </div>
     </div>
+
 
     <div class="card mb-4" style="box-shadow: 12px 12px 7px rgba(0, 0, 0, 0.3);">
         <div class="card-header">

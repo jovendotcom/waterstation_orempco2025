@@ -13,6 +13,9 @@ use App\Models\ProductForSale;
 use App\Models\StocksCount;
 use App\Models\UserLog;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\StocksCountExport;
+use PDF;
 use Session;
 
 class ProductInventoryController extends Controller
@@ -116,6 +119,30 @@ class ProductInventoryController extends Controller
 
         return redirect()->route('sales.stocksCount')->with('success', 'Stock added successfully!');
     }
+
+    
+    public function export($format)
+    {
+        $stocks = StocksCount::all();
+    
+        if ($stocks->isEmpty()) {
+            return redirect()->back()->with('fail', 'No stock data found to export.');
+        }
+    
+        if ($format === 'excel') {
+            return Excel::download(new StocksCountExport, 'physical_inventory_count_form.xlsx');
+        } elseif ($format === 'pdf') {
+            $pdf = \PDF::loadView('exports.stocks_count', compact('stocks'))
+                ->setPaper('legal', 'portrait'); // Use Legal size in portrait mode
+            return $pdf->download('physical_inventory_count_form.pdf');
+        } else {
+            return redirect()->back()->with('fail', 'Invalid export format selected.');
+        }
+    }
+    
+    
+    
+
 
     // Update stock count
     public function updateStockCount(Request $request)

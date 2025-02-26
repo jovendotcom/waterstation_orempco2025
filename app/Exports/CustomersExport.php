@@ -145,7 +145,7 @@ class CustomersExport implements FromArray, WithHeadings, WithTitle, WithStyles,
                 ]);
 
                 // ✅ Add Footer
-                $generatedOn = now()->format('F d, Y');
+                $generatedOn = now()->format('F d, Y h:i A');
                 $generatedBy = Auth::guard('sales')->user()->full_name ?? 'System';
                 $footerRow = $lastRow + 3;
 
