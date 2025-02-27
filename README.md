@@ -118,5 +118,13 @@ Open the .env file and update the database credentials:
     DB_USERNAME=root
     DB_PASSWORD=
 
+Run database migrations:
+
+    php artisan migrate
+    php artisan migrate --seed
+
+
+
+
 
 
