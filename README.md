@@ -124,7 +124,17 @@ Run database migrations:
     php artisan migrate --seed
 
 
+For the Excel and PDF format, run this command:
 
+    composer require maatwebsite/excel
+    composer require barryvdh/laravel-dompdf
+
+Serve the Application
+
+Start the Laravel development server:
+    Open your browser and go to:
+
+    http://127.0.0.1:8000
 
 
 
