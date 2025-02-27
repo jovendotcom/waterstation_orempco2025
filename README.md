@@ -136,5 +136,8 @@ Start the Laravel development server:
 
     http://127.0.0.1:8000
 
+Default Username and Password for Admin Module:
 
+    Username: admin
+    Password: @dmin_123
 
