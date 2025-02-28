@@ -24,6 +24,11 @@
                 Sales Transaction
             </a>
 
+            <a class="nav-link text-white {{ request()->routeIs('sales.credit_transaction') ? 'active' : '' }}" href="{{ route('sales.credit_transaction') }}">
+                <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-file-waveform"></i></div>
+                Credit Sales
+            </a>
+
             <a class="nav-link text-white {{ request()->routeIs('sales.salesHistory') ? 'active' : '' }}" href="{{ route('sales.salesHistory') }}">
                 <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-file-waveform"></i></div>
                 Sales History

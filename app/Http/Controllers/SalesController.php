@@ -256,14 +256,37 @@ class SalesController extends Controller
         }
     }
     
+    public function getCreditSales()
+    {
+        $sales = SalesTransaction::with(['customer', 'staff', 'salesItems'])
+            ->where('payment_method', 'credit')
+            ->get();
+    
+        return view('sales.credit_sales', compact('sales'));
+    }
+
+    public function getSaleItems($id)
+    {
+        $sale = SalesTransaction::with('salesItems')->find($id);
+    
+        if (!$sale) {
+            return response()->json([], 404);
+        }
+    
+        return response()->json($sale->salesItems);
+    }    
+    
+
     
     public function salesHistory(Request $request)
     {
         // Eager load the customer and sales_items relationships
-        $sales = SalesTransaction::with(['customer', 'salesItems'])->get();
+        $sales = SalesTransaction::with(['customer', 'salesItems'])
+            ->where('remarks', 'Paid') // Filter only paid transactions
+            ->get();
         
         return view('sales.sales_history', compact('sales'));
-    }    
+    }        
     
     
     public function customerList()

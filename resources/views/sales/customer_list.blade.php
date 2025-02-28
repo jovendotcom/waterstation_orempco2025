@@ -279,7 +279,7 @@
                     <div id="employeeFields" class="d-none">
                         <div class="mb-3">
                             <label for="employeeId" class="form-label">Employee ID</label>
-                            <input type="text" class="form-control @error('employee_id') is-invalid @enderror" id="employeeId" name="employee_id" placeholder="Enter employee ID" value="{{ old('employee_id') }}">
+                            <input type="text" class="form-control @error('employee_id') is-invalid @enderror" id="employeeId" name="employee_id" placeholder="Enter employee ID" value="{{ old('employee_id') }}" required>
                             @error('employee_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -288,14 +288,14 @@
                         <div class="row mb-3">
                             <div class="col">
                                 <label for="lastName" class="form-label">Last Name</label>
-                                <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="lastName" name="last_name" placeholder="Last Name" value="{{ old('last_name') }}">
+                                <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="lastName" name="last_name" placeholder="Last Name" value="{{ old('last_name') }}" required>
                                 @error('last_name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col">
                                 <label for="firstName" class="form-label">First Name</label>
-                                <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="firstName" name="first_name" placeholder="First Name" value="{{ old('first_name') }}">
+                                <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="firstName" name="first_name" placeholder="First Name" value="{{ old('first_name') }}" required>
                                 @error('first_name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -372,14 +372,14 @@
                     <div class="row mb-3">
                         <div class="col">
                             <label for="outsideLastName" class="form-label">Last Name</label>
-                            <input type="text" class="form-control @error('outside_last_name') is-invalid @enderror" id="outsideLastName" name="outside_last_name" placeholder="Last Name" value="{{ old('outside_last_name') }}">
+                            <input type="text" class="form-control @error('outside_last_name') is-invalid @enderror" id="outsideLastName" name="outside_last_name" placeholder="Last Name" value="{{ old('outside_last_name') }}" required>
                             @error('outside_last_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col">
                             <label for="outsideFirstName" class="form-label">First Name</label>
-                            <input type="text" class="form-control @error('outside_first_name') is-invalid @enderror" id="outsideFirstName" name="outside_first_name" placeholder="First Name" value="{{ old('outside_first_name') }}">
+                            <input type="text" class="form-control @error('outside_first_name') is-invalid @enderror" id="outsideFirstName" name="outside_first_name" placeholder="First Name" value="{{ old('outside_first_name') }}" required>
                             @error('outside_first_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

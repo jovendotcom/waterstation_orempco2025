@@ -57,6 +57,9 @@ Route::prefix('sales')->group(function () {
 
         Route::GET('/saleshistory', [SalesController::class, 'salesHistory'])->name('sales.salesHistory');
 
+        Route::GET('/creditsales', [SalesController::class, 'getCreditSales'])->name('sales.credit_transaction');
+        Route::get('/sales/get-items/{id}', [SalesController::class, 'getSaleItems'])->name('sales.getItems');
+
         Route::GET('/salesreport', [SalesController::class, 'getReports'])->name('sales.sales_report');
 
         Route::post('/customers', [CustomerListController::class, 'store'])->name('customers.store');

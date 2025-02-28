@@ -24,10 +24,9 @@ class SalesItem extends Model
         return $this->belongsTo(SalesTransaction::class);
     }
 
-    // Relationship with Product
     public function product()
     {
-        return $this->belongsTo(ProductForSale::class);
-    }
+        return $this->belongsTo(ProductForSale::class, 'product_id');
+    }    
 }
 
