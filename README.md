@@ -64,3 +64,80 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+Instructions for running the program:
+
+⚙️ Requirements
+
+Before you begin, make sure your system meets the following requirements:
+
+PHP 8.1 or higher
+
+Composer (PHP dependency manager)
+
+Laravel 10
+
+MySQL 8.0 or MariaDB
+
+Installation Process
+
+1. Clone the Repository
+
+Open VS Code.
+
+Press Ctrl + Shift + P and search for Git: Clone.
+
+Paste the repository URL and press Enter.
+
+Select a folder named htdocs inside your XAMPP directory to store the project.
+
+Wait for the cloning process to finish.
+
+2. Set Up the Project
+
+Open the cloned project in VS Code.
+
+Open the terminal and run the following commands:
+    composer install
+    npm install
+    cp .env.example .env
+    php artisan key:generate
+
+3. Configure the Database
+
+Open XAMPP and start Apache and MySQL.
+
+Open phpMyAdmin in your browser (http://localhost/phpmyadmin).
+
+Create a new database with the name waterstation_orempco2025.
+
+Open the .env file and update the database credentials:
+
+    DB_DATABASE=waterstation_orempco2025
+    DB_USERNAME=root
+    DB_PASSWORD=
+
+Run database migrations:
+
+    php artisan migrate
+    php artisan migrate --seed
+
+
+For the Excel and PDF format, run this command:
+
+    composer require maatwebsite/excel
+    composer require barryvdh/laravel-dompdf
+
+Serve the Application
+
+Start the Laravel development server:
+    Open your browser and go to:
+
+    http://127.0.0.1:8000
+
+Default Username and Password for Admin Module:
+
+    Username: admin
+    Password: @dmin_123
+
