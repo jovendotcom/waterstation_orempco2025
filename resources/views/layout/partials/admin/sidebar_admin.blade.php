@@ -22,6 +22,11 @@
                 User Management
             </a>
 
+            <a class="nav-link text-white {{ request()->routeIs('admin.credit_transaction') ? 'active' : '' }}" href="{{ route('admin.credit_transaction') }}">
+                <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-file-waveform"></i></div>
+                Credit Sales
+            </a>
+
             <!-- Add more admin links with respective icons here -->
         </div>
     </div>

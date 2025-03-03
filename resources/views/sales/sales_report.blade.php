@@ -35,12 +35,14 @@
         <div class="d-flex align-items-center">
             <label for="from_date" class="me-2">From:</label>
             <input type="date" id="from_date" class="form-control me-3">
+            
             <label for="to_date" class="me-2">To:</label>
             <input type="date" id="to_date" class="form-control me-3">
-            <button class="btn btn-primary me-3" id="filterBtn">Filter</button>
+            
             <button class="btn btn-success me-2" id="exportPdfBtn" title="Export PDF">
                 <i class="fas fa-file-pdf"></i>
             </button>
+            
             <button class="btn btn-info" id="exportExcelBtn" title="Export Excel">
                 <i class="fas fa-file-excel"></i>
             </button>
@@ -51,9 +53,11 @@
             <thead>
                 <tr>
                     <th>Date</th>
+                    <th>SO Number</th>
                     <th>Staff Name</th>
                     <th>Customer Name</th>
-                    <th>SO Number</th>
+                    <th>Department</th>
+                    <th>Member</th>
                     <th>Item Sold</th>
                     <th>Price</th>
                     <th>Quantity</th>
@@ -64,10 +68,42 @@
                 </tr>
             </thead>
             <tbody>
-                
-            </tbody>     
+            @foreach($sales as $sale)
+                @foreach($sale->salesItems as $item)
+                    <tr>
+                        <td>{{ \Carbon\Carbon::parse($sale->created_at)->format('Y-m-d') }}</td>
+                        <td>{{ $sale->po_number }}</td>
+                        <td>{{ $sale->staff->full_name }}</td>
+                        <td>{{ $sale->customer->full_name }}</td>
+                        <td>{{ $sale->customer->department }}</td>
+                        <td>{{ $sale->customer->membership_status }}</td>
+                        <td>{{ $item->product_name }}</td> 
+                        <td>₱{{ number_format($item->price, 2) }}</td>
+                        <td>{{ $item->quantity }}</td>
+                        <td>₱{{ number_format($item->subtotal, 2) }}</td>
+                        <td>{{ ucfirst($sale->payment_method) }}</td>
+                        <td>{{ $sale->credit_payment_method ?? '-' }}</td>
+                        <td>{{ $sale->remarks }}</td>
+                    </tr>
+                @endforeach
+            @endforeach
+            </tbody> 
         </table>
     </div>
 </div>
 
+
+<script>
+document.getElementById('exportExcelBtn').addEventListener('click', function () {
+    let fromDate = document.getElementById('from_date').value;
+    let toDate = document.getElementById('to_date').value;
+
+    if (!fromDate || !toDate) {
+        alert('Please select both From and To dates before exporting.');
+        return;
+    }
+
+    window.location.href = `{{ route('sales.export.excel') }}?from_date=${fromDate}&to_date=${toDate}`;
+});
+</script>
 @endsection

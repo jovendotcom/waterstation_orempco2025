@@ -79,7 +79,7 @@
 </div>
 
 <!-- MODAL FOR VIEWING TRANSACTION ITEMS -->
-<div class="modal fade" id="viewSaleModal" tabindex="-1" aria-labelledby="viewSaleModalLabel" aria-hidden="true">
+<div class="modal fade" id="viewSaleModal" tabindex="-1" aria-labelledby="viewSaleModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -99,7 +99,7 @@
                             <th>Quantity</th>
                             <th>Price</th>
                             <th>Subtotal</th>
-                        </tr>
+                        </tr> 
                     </thead>
                     <tbody id="modalItemsBody">
                         <tr><td colspan="4" class="text-center">No items loaded</td></tr>

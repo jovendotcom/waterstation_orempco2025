@@ -16,6 +16,8 @@ use App\Models\SalesTransaction;
 use App\Models\SalesItem;
 use Session;
 use App\Models\MaterialRequirement;
+use App\Exports\SalesReportExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SalesController extends Controller
 {
@@ -301,6 +303,15 @@ class SalesController extends Controller
 
     public function getReports()
     {
-        return view("sales.sales_report");
+        $sales = SalesTransaction::with(['staff', 'customer'])->latest()->get();
+        return view('sales.sales_report', compact('sales'));
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $fromDate = $request->input('from_date', now()->subMonth()->toDateString()); 
+        $toDate = $request->input('to_date', now()->toDateString());
+
+        return Excel::download(new SalesReportExport($fromDate, $toDate), 'OREMPCO_Waterstation_Sales_Report.xlsx');
     }
 }

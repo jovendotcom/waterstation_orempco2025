@@ -7,8 +7,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\Product;
+use App\Models\ProductForSale;
+use App\Models\StocksCount;
+use App\Models\Customer;
 use App\Models\UserLog;
+use App\Models\SalesTransaction;
+use App\Models\SalesItem;
 use Session;
+use App\Models\MaterialRequirement;
+use App\Exports\SalesReportExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AdminController extends Controller
 {
@@ -186,5 +195,23 @@ class AdminController extends Controller
 
         // Redirect back with success message
         return redirect()->back()->with('success', 'Password changed successfully!');
+    }
+
+    public function getCreditSales()
+    {
+        $sales = SalesTransaction::with(['customer', 'staff', 'salesItems'])
+            ->where('payment_method', 'credit')
+            ->get();
+    
+        return view('admin.credit_sales', compact('sales'));
+    }
+
+    public function markAsPaid($id)
+    {
+        $sale = SaleTransaction::findOrFail($id);
+        $sale->remarks = "Paid";
+        $sale->save();
+
+        return response()->json(['success' => true]);
     }
 }

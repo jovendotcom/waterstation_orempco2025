@@ -36,6 +36,9 @@ Route::prefix('admin')->group(function () {
         Route::POST('/admin/add_user', [AdminController::class, 'add_user'])->name('admin.add_user');
         Route::PUT('/admin/user/{id}/edit', [AdminController::class, 'edit_user'])->name('admin.edit_user');
         Route::PUT('/admin/user/{id}/change_password', [AdminController::class, 'change_password'])->name('admin.change_password');
+
+        Route::GET('/creditsales', [AdminController::class, 'getCreditSales'])->name('admin.credit_transaction');
+        Route::post('/admin/sales/pay/{id}', [AdminController::class, 'markAsPaid'])->name('admin.sales.pay');
     });
 });
 
@@ -61,6 +64,7 @@ Route::prefix('sales')->group(function () {
         Route::get('/sales/get-items/{id}', [SalesController::class, 'getSaleItems'])->name('sales.getItems');
 
         Route::GET('/salesreport', [SalesController::class, 'getReports'])->name('sales.sales_report');
+        Route::get('/sales/export-excel', [SalesController::class, 'exportExcel'])->name('sales.export.excel');
 
         Route::post('/customers', [CustomerListController::class, 'store'])->name('customers.store');
         Route::post('/customers/outside', [CustomerListController::class, 'storeOutside'])->name('customers.storeOutside');
