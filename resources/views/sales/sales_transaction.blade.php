@@ -227,6 +227,43 @@
     </div>
 </div>
 
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmIncreaseModal" tabindex="-1" aria-labelledby="confirmIncreaseLabel" aria-hidden="true" data-bs-backdrop ="static">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmIncreaseLabel">Confirm Quantity Increase</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Why are you increasing the quantity of <strong><span id="materialNameSpan"></span></strong>?</p>
+
+        <div id="reasonSelection">
+          <div class="form-check">
+            <input class="form-check-input reason-checkbox" type="checkbox" id="reason1" value="Stock Refill">
+            <label class="form-check-label" for="reason1">Broken Material</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input reason-checkbox" type="checkbox" id="reason2" value="Incorrect Initial Entry">
+            <label class="form-check-label" for="reason2">Incorrect Initial Entry</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input reason-checkbox" type="checkbox" id="reason3" value="Additional Requirement">
+            <label class="form-check-label" for="reason3">Additional Requirement</label>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmIncreaseBtn" disabled>Yes, Increase</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 <script>
 // Initialize Select2 on customer dropdown
 $(document).ready(function() {
@@ -430,21 +467,68 @@ function updateCartUI() {
     document.getElementById("total-amount").textContent = totalAmount.toFixed(2);
 }
 
+let selectedProductId = null;
+let selectedMaterialName = null;
+let selectedChange = 0;
+
 function changeItemNeededQty(productId, materialName, change) {
-    let product = cart.find(item => item.id === productId);
+    selectedProductId = productId;
+    selectedMaterialName = materialName;
+    selectedChange = change;
 
-    if (product && product.materials.hasOwnProperty(materialName)) {
-        let newQty = product.materials[materialName] + change;
-        if (newQty < 0) newQty = 0; // Prevent negative values
+    // Update modal text
+    document.getElementById("materialNameSpan").textContent = materialName;
 
-        // Update the quantity in the cart object
-        product.materials[materialName] = newQty;
-
-        // Update the UI
-        let neededQtyElement = document.getElementById(`item-needed-${productId}-${materialName}`);
-        neededQtyElement.innerText = newQty;
-    }
+    // Show modal
+    var myModal = new bootstrap.Modal(document.getElementById("confirmIncreaseModal"));
+    myModal.show();
 }
+
+document.querySelectorAll(".reason-checkbox").forEach(checkbox => {
+    checkbox.addEventListener("change", function () {
+        // Enable the button only if at least one checkbox is checked
+        let isChecked = document.querySelectorAll(".reason-checkbox:checked").length > 0;
+        document.getElementById("confirmIncreaseBtn").disabled = !isChecked;
+    });
+});
+
+document.getElementById("confirmIncreaseBtn").addEventListener("click", function () {
+    if (selectedProductId && selectedMaterialName) {
+        let selectedReasons = [];
+        document.querySelectorAll(".reason-checkbox:checked").forEach(checkbox => {
+            selectedReasons.push(checkbox.value);
+        });
+
+        if (selectedReasons.length > 0) {
+            let product = cart.find(item => item.id === selectedProductId);
+            if (product && product.materials.hasOwnProperty(selectedMaterialName)) {
+                let newQty = product.materials[selectedMaterialName] + selectedChange;
+                if (newQty < 0) newQty = 0;
+
+                // Update cart object
+                product.materials[selectedMaterialName] = newQty;
+
+                // Update the UI
+                let neededQtyElement = document.getElementById(`item-needed-${selectedProductId}-${selectedMaterialName}`);
+                neededQtyElement.innerText = newQty;
+
+                console.log("Quantity increased for:", selectedMaterialName, "Reasons:", selectedReasons);
+            }
+        }
+    }
+
+    // Hide modal
+    var myModalEl = document.getElementById("confirmIncreaseModal");
+    var modal = bootstrap.Modal.getInstance(myModalEl);
+    modal.hide();
+
+    // Reset checkboxes
+    document.querySelectorAll(".reason-checkbox").forEach(checkbox => checkbox.checked = false);
+    document.getElementById("confirmIncreaseBtn").disabled = true;
+});
+
+
+
 
 
 function changeQty(productId, change) {
