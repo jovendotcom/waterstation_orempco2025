@@ -5,7 +5,7 @@ window.addEventListener('DOMContentLoaded', event => {
             searchable: true,  // Enable/disable searching
             fixedHeight: false, // Fix the height of the table
             perPage: 20,       // Number of rows per page
-            perPageSelect: [5, 7, 10, 15, 20],  // Options for rows per page selection
+            perPageSelect: [20, 30, 40, 50, 100],  // Options for rows per page selection
             labels: {
                 placeholder: "Search...", // Placeholder text for search input
                 perPage: "rows per page", // Label for per-page dropdown

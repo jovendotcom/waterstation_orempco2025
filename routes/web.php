@@ -39,6 +39,12 @@ Route::prefix('admin')->group(function () {
 
         Route::GET('/creditsales', [AdminController::class, 'getCreditSales'])->name('admin.credit_transaction');
         Route::post('/admin/sales/pay/{id}', [AdminController::class, 'markAsPaid'])->name('admin.sales.pay');
+
+        Route::GET('/productInventory', [AdminController::class, 'productInventory'])->name('admin.productInventory');
+        Route::post('/products/store', [AdminController::class, 'store'])->name('products.storeProductAdmin');
+        Route::post('/products/addStock', [AdminController::class, 'addStock'])->name('products.addStockAdmin');
+
+        Route::post('/products/update-price', [AdminController::class, 'updatePrice'])->name('products.updatePrice');
     });
 });
 
@@ -84,6 +90,7 @@ Route::prefix('sales')->group(function () {
         Route::get('/stocks/export/{format}', [ProductInventoryController::class, 'export'])->name('stocks.export');
 
         Route::post('/products/store', [ProductInventoryController::class, 'store'])->name('products.storeProduct');
+        Route::post('/products/addStock', [ProductInventoryController::class, 'addStock'])->name('products.addStock');
         
     });
 });

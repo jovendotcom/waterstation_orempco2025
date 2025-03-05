@@ -65,6 +65,7 @@
                     <tr>
                         <th>Item Name</th>
                         <th>Qty</th>
+                        <th>Price</th>
                         <th>Remarks</th>
                         <th>Actions</th>
                     </tr>
@@ -74,6 +75,7 @@
                         <tr>
                             <td>{{ $stock->item_name }}</td>
                             <td>{{ $stock->quantity }} piece(s)</td>
+                            <td>₱{{ number_format($stock->price, 2) }}</td>
                             <td>
                                 @if($stock->quantity > 0)
                                     <span class="badge bg-success">Available</span>
@@ -82,7 +84,7 @@
                                 @endif
                             </td>
                             <td>
-                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateStockModal" data-item-name="{{ $stock->item_name }}" data-quantity="{{ $stock->quantity }}">
+                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateStockModal" data-item-name="{{ $stock->item_name }}" data-quantity="{{ $stock->quantity }}" data-price="{{ $stock->price }}">
                                     <i class="fas fa-plus"></i> Add
                                 </button>
                             </td>
@@ -105,12 +107,16 @@
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="item_name" class="form-label">Item Name</label>
+                        <label for="item_name" class="form-label">Material Name</label>
                         <input type="text" class="form-control" id="item_name" name="item_name" required>
                     </div>
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Quantity</label>
                         <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price of the Material</label>
+                        <input type="number" class="form-control" id="price" name="price" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -142,6 +148,10 @@
                         <label for="update_quantity" class="form-label">Quantity to Add</label>
                         <input type="number" class="form-control" id="update_quantity" name="quantity" required min="1">
                     </div>
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price of the Material</label>
+                        <input type="number" class="form-control" id="price" name="price" required>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -149,7 +159,7 @@
                 </div>
             </form>
         </div>
-    </div>
+    </div>  
 </div>
 
 
@@ -162,13 +172,16 @@
             const button = event.relatedTarget;
             const itemName = button.getAttribute('data-item-name');
             const quantity = button.getAttribute('data-quantity');
+            const price = button.getAttribute('data-price');
 
             const itemNameInput = updateStockModal.querySelector('#update_item_name');
             const quantityInput = updateStockModal.querySelector('#update_quantity');
+            const priceInput = updateStockModal.querySelector('#price');
 
             itemNameInput.value = itemName;
             quantityInput.setAttribute('min', 1); // Ensuring a valid minimum
             quantityInput.value = ''; // Clear previous input
+            priceInput.value = price;
 
             // Focus on the quantity input when the modal opens
             setTimeout(() => {

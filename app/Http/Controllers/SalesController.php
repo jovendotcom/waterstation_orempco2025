@@ -118,25 +118,46 @@ class SalesController extends Controller
 
     public function salesTransaction(Request $request)
     {
-        $products = ProductForSale::all(); // Fetch all products
+        $products = ProductForSale::all(); 
     
-        // Fetch customers and order them based on the 'type' column
         $customers = Customer::orderByRaw("FIELD(type, 'department', 'employee')")
-                             ->orderBy('full_name', 'asc') // Then order alphabetically by full_name
-                             ->get(); // Fetch customers
+                             ->orderBy('full_name', 'asc')
+                             ->get(); 
     
-        // Generate PO number
-        $poNumber = 'SO-' . strtoupper(uniqid());
-        
-        return view('sales.sales_transaction', compact('products', 'customers', 'poNumber')); // Pass both products and customers to the view
-    }
+        // Get the last PO number from sales_transactions
+        $lastTransaction = \DB::table('sales_transactions')
+            ->where('po_number', 'LIKE', 'SO-%')
+            ->orderBy('id', 'desc')
+            ->first();
+    
+        // If no previous transactions, start at 0001
+        $lastNumber = $lastTransaction ? (int) substr($lastTransaction->po_number, 3) : 0;
+        $newNumber = $lastNumber + 1;
+    
+        // Format as 4-digit number (e.g., SO-0001, SO-0002, ...)
+        $poNumber = 'SO-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+    
+        return view('sales.sales_transaction', compact('products', 'customers', 'poNumber'));
+    }       
     
 
     public function newPo()
     {
-        $poNumber = 'SO-' . strtoupper(uniqid());
+        // Get last PO number from sales_transactions
+        $lastTransaction = \DB::table('sales_transactions')
+            ->where('po_number', 'LIKE', 'SO-%')
+            ->orderBy('id', 'desc')
+            ->first();
+    
+        // Extract last number and increment
+        $lastNumber = $lastTransaction ? (int) substr($lastTransaction->po_number, 3) : 0;
+        $newNumber = $lastNumber + 1;
+    
+        // Format as 4-digit number
+        $poNumber = 'SO-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+    
         return response()->json(['po_number' => $poNumber]);
-    }
+    }    
 
 
     public function store(Request $request)

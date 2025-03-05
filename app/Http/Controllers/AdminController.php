@@ -214,4 +214,45 @@ class AdminController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function productInventory(Request $request)
+    {
+        $products = ProductForSale::all();
+        $stocks = StocksCount::all(); // Fetch available stock items
+    
+        return view('admin.product_inventory', compact('products', 'stocks'));
+    } 
+
+    public function addStock(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products_for_sale,id',
+            'add_quantity' => 'required|integer|min:1',
+        ]);
+
+        $product = ProductForSale::find($request->product_id);
+
+        if ($product->quantity === null) {
+            return redirect()->back()->with('fail', 'Stock cannot be added for this product.');
+        }
+
+        $product->quantity += $request->add_quantity;
+        $product->save();
+
+        return redirect()->back()->with('success', 'Stock updated successfully.');
+    }
+
+    public function updatePrice(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products_for_sale,id',
+            'new_price' => 'required|numeric|min:0',
+        ]);
+
+        $product = ProductForSale::find($request->product_id);
+        $product->price = $request->new_price;
+        $product->save();
+
+        return redirect()->back()->with('success', 'Price updated successfully.');
+    }
 }

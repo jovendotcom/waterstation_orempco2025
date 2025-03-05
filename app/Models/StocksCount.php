@@ -14,6 +14,7 @@ class StocksCount extends Model
     protected $fillable = [
         'item_name',
         'quantity',
+        'price',
         'remarks',
     ];
 

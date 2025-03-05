@@ -93,6 +93,25 @@ class ProductInventoryController extends Controller
     
         return redirect()->back()->with('success', 'Product added successfully.');
     }
+
+    public function addStock(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products_for_sale,id',
+            'add_quantity' => 'required|integer|min:1',
+        ]);
+
+        $product = ProductForSale::find($request->product_id);
+
+        if ($product->quantity === null) {
+            return redirect()->back()->with('fail', 'Stock cannot be added for this product.');
+        }
+
+        $product->quantity += $request->add_quantity;
+        $product->save();
+
+        return redirect()->back()->with('success', 'Stock updated successfully.');
+    }
     
     
     
@@ -108,12 +127,14 @@ class ProductInventoryController extends Controller
         $request->validate([
             'item_name' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
             'remarks' => 'nullable|string|max:500',
         ]);
 
         StocksCount::create([
             'item_name' => $request->item_name,
             'quantity' => $request->quantity,
+            'price' => $request->price,
             'remarks' => $request->remarks,
         ]);
 
@@ -140,9 +161,6 @@ class ProductInventoryController extends Controller
         }
     }
     
-    
-    
-
 
     // Update stock count
     public function updateStockCount(Request $request)

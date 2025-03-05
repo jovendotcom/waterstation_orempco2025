@@ -29,7 +29,7 @@
 <div class="card mb-4" style="box-shadow: 12px 12px 7px rgba(0, 0, 0, 0.3);">
     <div class="card-header">
         <i class="fas fa-table me-1"></i>
-        Customer List
+        Credit List
     </div>
     <div class="card-body">
         <table id="datatablesSimple" class="table table-bordered table-striped">
@@ -62,14 +62,17 @@
                         @endif
                     </td>
                     <td>
-                        <button class="btn btn-primary btn-sm view-sale" 
-                            data-id="{{ $sale->id }}" 
-                            data-po="{{ $sale->po_number }}" 
-                            data-customer="{{ $sale->customer->full_name }}"
-                            data-date="{{ $sale->created_at->format('Y-m-d H:i A') }}"
-                            data-url="{{ route('sales.getItems', $sale->id) }}"> 
-                            <i class="fas fa-eye"></i> View
-                        </button>
+                    <button class="btn btn-primary btn-sm view-sale" 
+                        data-id="{{ $sale->id }}" 
+                        data-po="{{ $sale->po_number }}" 
+                        data-customer="{{ $sale->customer->full_name }}"
+                        data-date="{{ $sale->created_at->format('Y-m-d H:i A') }}"
+                        data-total="{{ number_format($sale->total_amount, 2) }}"
+                        data-payment="{{ ucfirst($sale->payment_method) }}"
+                        data-credit-method="{{ $sale->credit_payment_method ?? 'N/A' }}"
+                        data-url="{{ route('sales.getItems', $sale->id) }}"> 
+                        <i class="fas fa-eye"></i> View
+                    </button>
                     </td>
                 </tr>
                 @endforeach
@@ -105,6 +108,9 @@
                         <tr><td colspan="4" class="text-center">No items loaded</td></tr>
                     </tbody>
                 </table>
+                <p><strong>Total Amount:</strong> <span id="modalTotalAmount"></span></p>
+                <p><strong>Payment Method:</strong> <span id="modalPaymentMethod"></span></p>
+                <p><strong>Charge To:</strong> <span id="modalChargeTo"></span></p>
             </div>
         </div>
     </div>
@@ -119,11 +125,16 @@
                 let poNumber = button.dataset.po;
                 let customerName = button.dataset.customer;
                 let date = button.dataset.date;
-                let url = button.dataset.url;
+                let totalAmount = button.dataset.total;
+                let paymentMethod = button.dataset.payment;
+                let chargeTo = button.dataset.creditMethod;
 
                 document.getElementById("modalPoNumber").textContent = poNumber;
                 document.getElementById("modalCustomerName").textContent = customerName;
                 document.getElementById("modalDate").textContent = date;
+                document.getElementById("modalTotalAmount").textContent = `₱${totalAmount}`;
+                document.getElementById("modalPaymentMethod").textContent = paymentMethod;
+                document.getElementById("modalChargeTo").textContent = chargeTo;
 
                 let itemsBody = document.getElementById("modalItemsBody");
                 itemsBody.innerHTML = "<tr><td colspan='4' class='text-center'>Loading...</td></tr>";
@@ -131,7 +142,7 @@
                 let modal = new bootstrap.Modal(document.getElementById("viewSaleModal"));
                 modal.show();
 
-                fetch(url)
+                fetch(button.dataset.url)
                     .then(response => response.json())
                     .then(data => {
                         itemsBody.innerHTML = "";

@@ -1,11 +1,11 @@
-@extends('layout.sales')
+@extends('layout.admin')
 
 @section('title', 'Product Inventory')
 
 @section('content')
 <h1 class="mt-4">Product Inventory</h1>
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('sales.transaction') }}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
         <li class="breadcrumb-item active">Product Inventory</li>
     </ol>
 
@@ -87,14 +87,25 @@
                             <td>{{ $product->quantity ?? 'N/A' }}</td>
                             <td>{{ number_format($product->price, 2) }}</td>
                             <td>
-                            <button class="btn btn-primary btn-sm add-stock-btn" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#addStockModal" 
-                                    data-id="{{ $product->id }}" 
-                                    data-name="{{ $product->product_name }}"
-                                    {{ is_null($product->quantity) ? 'disabled' : '' }}>
-                                Add Stock
-                            </button>
+                                <!-- Add Stock Button -->
+                                <button class="btn btn-primary btn-sm add-stock-btn" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#addStockModal" 
+                                        data-id="{{ $product->id }}" 
+                                        data-name="{{ $product->product_name }}"
+                                        {{ is_null($product->quantity) ? 'disabled' : '' }}>
+                                    Add Stock
+                                </button>
+                                
+                                <!-- Update Price Button -->
+                                <button class="btn btn-warning btn-sm update-price-btn" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#updatePriceModal" 
+                                        data-id="{{ $product->id }}" 
+                                        data-name="{{ $product->product_name }}"
+                                        data-price="{{ $product->price }}">
+                                    Update Price
+                                </button>
                             </td>
                         </tr>
                     @empty
@@ -112,7 +123,7 @@
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ route('products.storeProduct') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('products.storeProductAdmin') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title" id="addUserModalLabel">Add New Product</h5>
@@ -182,7 +193,7 @@
 <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ route('products.addStock') }}" method="POST">
+            <form action="{{ route('products.addStockAdmin') }}" method="POST">
                 @csrf
                 <input type="hidden" name="product_id" id="product_id">
                 <div class="modal-header">
@@ -199,6 +210,33 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Price Modal -->
+<div class="modal fade" id="updatePriceModal" tabindex="-1" aria-labelledby="updatePriceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('products.updatePrice') }}" method="POST">
+                @csrf
+                <input type="hidden" name="product_id" id="update_product_id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updatePriceModalLabel">Update Price</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Product Name:</strong> <span id="update_product_name"></span></p>
+                    <div class="mb-3">
+                        <label for="new_price" class="form-label">New Price</label>
+                        <input type="number" class="form-control" name="new_price" id="new_price" step="0.01" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Update Price</button>
                 </div>
             </form>
         </div>
@@ -232,9 +270,13 @@
             document.getElementById('product_id').value = productId;
             document.getElementById('product_name').textContent = productName;
         });
+        // Update Price Modal
+        document.getElementById('updatePriceModal').addEventListener('show.bs.modal', function (event) {
+            let button = event.relatedTarget;
+            document.getElementById('update_product_id').value = button.getAttribute('data-id');
+            document.getElementById('update_product_name').textContent = button.getAttribute('data-name');
+            document.getElementById('new_price').value = button.getAttribute('data-price');
+        });
     });
 </script>
-
-
-
 @endsection
