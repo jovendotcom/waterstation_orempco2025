@@ -105,8 +105,28 @@ class AdminController extends Controller
 
     public function adminDashboard(Request $request)
     {
-        return view('admin.admin_dashboard');
+        $dailySales = DB::table('sales_transactions')
+                        ->whereDate('created_at', today())
+                        ->sum('total_amount');
+    
+        $monthlySales = DB::table('sales_transactions')
+                          ->whereMonth('created_at', now()->month)
+                          ->whereYear('created_at', now()->year)
+                          ->sum('total_amount');
+    
+        $totalTransactions = DB::table('sales_transactions')->count();
+    
+        $salesGraphData = DB::table('sales_transactions')
+                            ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(total_amount) as total_sales'))
+                            ->whereMonth('created_at', now()->month)
+                            ->whereYear('created_at', now()->year)
+                            ->groupBy(DB::raw('DATE(created_at)'))
+                            ->orderBy('date')
+                            ->get();
+    
+        return view('admin.admin_dashboard', compact('dailySales', 'monthlySales', 'totalTransactions', 'salesGraphData'));
     }
+    
 
     public function userManagement()
     {

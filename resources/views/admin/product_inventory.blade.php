@@ -87,24 +87,31 @@
                             <td>{{ $product->quantity ?? 'N/A' }}</td>
                             <td>{{ number_format($product->price, 2) }}</td>
                             <td>
+                                <!-- Edit Button -->
+                                <button class="btn btn-success btn-sm add-stock-btn" title="Edit">
+                                    <i class="fas fa-edit"></i> 
+                                </button>
+
                                 <!-- Add Stock Button -->
-                                <button class="btn btn-primary btn-sm add-stock-btn" 
+                                <button class="btn btn-primary btn-sm add-stock-btn"  
+                                        title="Add Stock"
                                         data-bs-toggle="modal" 
                                         data-bs-target="#addStockModal" 
                                         data-id="{{ $product->id }}" 
                                         data-name="{{ $product->product_name }}"
                                         {{ is_null($product->quantity) ? 'disabled' : '' }}>
-                                    Add Stock
+                                    <i class="fas fa-plus"></i> 
                                 </button>
-                                
+
                                 <!-- Update Price Button -->
-                                <button class="btn btn-warning btn-sm update-price-btn" 
+                                <button class="btn btn-warning btn-sm update-price-btn"  
+                                        title="Update Price"
                                         data-bs-toggle="modal" 
                                         data-bs-target="#updatePriceModal" 
                                         data-id="{{ $product->id }}" 
                                         data-name="{{ $product->product_name }}"
                                         data-price="{{ $product->price }}">
-                                    Update Price
+                                    <i class="fas fa-peso-sign"></i> 
                                 </button>
                             </td>
                         </tr>
@@ -201,7 +208,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p><strong>Product Name:</strong> <span id="product_name"></span></p>
+                    <p><strong>Product Name:</strong> <span id="stock_product_name"></span></p>
                     <div class="mb-3">
                         <label for="add_quantity" class="form-label">Quantity to Add</label>
                         <input type="number" class="form-control" name="add_quantity" id="add_quantity" min="1" required>
@@ -268,7 +275,7 @@
             let productName = button.getAttribute('data-name');
 
             document.getElementById('product_id').value = productId;
-            document.getElementById('product_name').textContent = productName;
+            document.getElementById('stock_product_name').textContent = productName;
         });
         // Update Price Modal
         document.getElementById('updatePriceModal').addEventListener('show.bs.modal', function (event) {

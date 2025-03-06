@@ -3,8 +3,7 @@
         <div class="nav">
             <br>
             <!-- Dashboard Link -->
-            <a class="nav-link text-white"
-                href="#">
+            <a class="nav-link text-white {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
                 <div class="sb-nav-link-icon text-white">
                     <!-- Dashboard Icon SVG -->
                     <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="grid-2" role="img"
