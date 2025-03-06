@@ -38,7 +38,8 @@ Route::prefix('admin')->group(function () {
         Route::PUT('/admin/user/{id}/change_password', [AdminController::class, 'change_password'])->name('admin.change_password');
 
         Route::GET('/creditsales', [AdminController::class, 'getCreditSales'])->name('admin.credit_transaction');
-        Route::post('/admin/sales/pay/{id}', [AdminController::class, 'markAsPaid'])->name('admin.sales.pay');
+        Route::get('/sales/get-items/{id}', [AdminController::class, 'getSaleItems'])->name('admin.getItems');
+        Route::post('/sales/{id}/mark-paid', [AdminController::class, 'markAsPaid'])->name('sales.markPaid');
 
         Route::GET('/productInventory', [AdminController::class, 'productInventory'])->name('admin.productInventory');
         Route::post('/products/store', [AdminController::class, 'store'])->name('products.storeProductAdmin');

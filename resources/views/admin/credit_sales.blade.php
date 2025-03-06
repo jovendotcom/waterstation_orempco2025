@@ -32,7 +32,7 @@
 <div class="card mb-4" style="box-shadow: 12px 12px 7px rgba(0, 0, 0, 0.3);">
     <div class="card-header">
         <i class="fas fa-table me-1"></i>
-        Customer List
+        Credit List
     </div>
     <div class="card-body">
         <table id="datatablesSimple" class="table table-bordered table-striped">
@@ -65,11 +65,22 @@
                         @endif
                     </td>
                     <td>
-                        <button class="btn btn-success btn-sm pay-sale"
-                            data-id="{{ $sale->id }}" 
-                            data-customer="{{ $sale->customer->full_name }}">
-                            <i class="fas fa-money-bill-wave"></i> Pay
-                        </button>
+                    <button class="btn btn-primary btn-sm view-sale" 
+                        data-id="{{ $sale->id }}" 
+                        data-po="{{ $sale->po_number }}" 
+                        data-customer="{{ $sale->customer->full_name }}"
+                        data-date="{{ $sale->created_at->format('Y-m-d H:i A') }}"
+                        data-total="{{ number_format($sale->total_amount, 2) }}"
+                        data-payment="{{ ucfirst($sale->payment_method) }}"
+                        data-credit-method="{{ $sale->credit_payment_method ?? 'N/A' }}"
+                        data-url="{{ route('sales.getItems', $sale->id) }}"> 
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                    @if($sale->remarks !== 'Paid')
+                    <button class="btn btn-success btn-sm mark-paid" data-id="{{ $sale->id }}">
+                        <i class="fas fa-money-bill-wave"></i> Pay
+                    </button>
+                    @endif
                     </td>
                 </tr>
                 @endforeach
@@ -78,82 +89,125 @@
     </div>
 </div>
 
-<!-- Payment Confirmation Modal -->
-<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<!-- MODAL FOR VIEWING TRANSACTION ITEMS -->
+<div class="modal fade" id="viewSaleModal" tabindex="-1" aria-labelledby="viewSaleModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="paymentModalLabel">Confirm Payment</h5>
+                <h5 class="modal-title" id="viewSaleModalLabel">Transaction Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to mark this sale as <strong>Paid</strong>?</p>
-                <p><strong>Customer:</strong> <span id="confirmCustomerName"></span></p>
-                <input type="hidden" id="confirmSaleId">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="confirmPayBtn">Yes, Mark as Paid</button>
+                <p><strong>SO Number:</strong> <span id="modalPoNumber"></span></p>
+                <p><strong>Customer Name:</strong> <span id="modalCustomerName"></span></p>
+                <p><strong>Date:</strong> <span id="modalDate"></span></p>
+                <hr>
+                <h5>Items</h5>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Subtotal</th>
+                        </tr> 
+                    </thead>
+                    <tbody id="modalItemsBody">
+                        <tr><td colspan="4" class="text-center">No items loaded</td></tr>
+                    </tbody>
+                </table>
+                <p><strong>Total Amount:</strong> <span id="modalTotalAmount"></span></p>
+                <p><strong>Payment Method:</strong> <span id="modalPaymentMethod"></span></p>
+                <p><strong>Charge To:</strong> <span id="modalChargeTo"></span></p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-    document.body.addEventListener("click", function (event) {
-        if (event.target.closest(".pay-sale")) {
-            let button = event.target.closest(".pay-sale");
-            let saleId = button.dataset.id;
-            let customerName = button.dataset.customer;
+    document.addEventListener("DOMContentLoaded", function() {
+        document.body.addEventListener("click", function(event) {
+            if (event.target.closest(".view-sale")) {
+                let button = event.target.closest(".view-sale");
 
-            document.getElementById("confirmSaleId").value = saleId;
-            document.getElementById("confirmCustomerName").textContent = customerName;
+                let poNumber = button.dataset.po;
+                let customerName = button.dataset.customer;
+                let date = button.dataset.date;
+                let totalAmount = button.dataset.total;
+                let paymentMethod = button.dataset.payment;
+                let chargeTo = button.dataset.creditMethod;
 
-            let modal = new bootstrap.Modal(document.getElementById("paymentModal"));
-            modal.show();
-        }
-    });
+                document.getElementById("modalPoNumber").textContent = poNumber;
+                document.getElementById("modalCustomerName").textContent = customerName;
+                document.getElementById("modalDate").textContent = date;
+                document.getElementById("modalTotalAmount").textContent = `₱${totalAmount}`;
+                document.getElementById("modalPaymentMethod").textContent = paymentMethod;
+                document.getElementById("modalChargeTo").textContent = chargeTo;
 
-    document.getElementById("confirmPayBtn").addEventListener("click", function () {
-        let saleId = document.getElementById("confirmSaleId").value;
-        let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+                let itemsBody = document.getElementById("modalItemsBody");
+                itemsBody.innerHTML = "<tr><td colspan='4' class='text-center'>Loading...</td></tr>";
 
-        fetch(`/admin/sales/pay/${saleId}`, {
-            method: "POST",
-            headers: {
-                "X-CSRF-TOKEN": csrfToken,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ status: "Paid" }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Find the row for the updated sale
-                let row = document.querySelector(`button[data-id='${saleId}']`).closest("tr");
+                let modal = new bootstrap.Modal(document.getElementById("viewSaleModal"));
+                modal.show();
 
-                // Find the remarks column and update it
-                let remarksCell = row.querySelector("td:nth-child(7) span"); // 7th column = Remarks
-                remarksCell.classList.remove("bg-danger");
-                remarksCell.classList.add("bg-success");
-                remarksCell.textContent = "Paid";
-
-                // Disable the Pay button after marking as Paid
-                let payButton = row.querySelector(".pay-sale");
-                payButton.classList.add("disabled");
-                payButton.setAttribute("disabled", "true");
-                payButton.innerHTML = `<i class="fas fa-check"></i> Paid`;
-
-                // Hide modal
-                let modal = bootstrap.Modal.getInstance(document.getElementById("paymentModal"));
-                modal.hide();
-            } else {
-                alert("Payment update failed!");
+                fetch(button.dataset.url)
+                    .then(response => response.json())
+                    .then(data => {
+                        itemsBody.innerHTML = "";
+                        if (data.length === 0) {
+                            itemsBody.innerHTML = "<tr><td colspan='4' class='text-center'>No items found</td></tr>";
+                        } else {
+                            data.forEach(item => {
+                                let row = `<tr>
+                                    <td>${item.product_name}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>₱${parseFloat(item.price).toFixed(2)}</td>
+                                    <td>₱${parseFloat(item.subtotal).toFixed(2)}</td>
+                                </tr>`;
+                                itemsBody.innerHTML += row;
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error fetching sale items:", error);
+                        itemsBody.innerHTML = "<tr><td colspan='4' class='text-center text-danger'>Failed to load items</td></tr>";
+                    });
             }
-        })
-        .catch(error => console.error("Error updating payment:", error));
+        });
     });
-});
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.body.addEventListener("click", function (event) {
+            if (event.target.closest(".mark-paid")) {
+                let button = event.target.closest(".mark-paid");
+                let saleId = button.dataset.id;
+
+                if (confirm("Are you sure you want to mark this sale as paid?")) {
+                    fetch(`/sales/${saleId}/mark-paid`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document.querySelector("meta[name='csrf-token']").getAttribute("content")
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("Sale marked as paid successfully.");
+                            location.reload(); // Reload to update the UI
+                        } else {
+                            alert("Error: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("An unexpected error occurred. Please try again.");
+                    });
+                }
+            }
+        });
+    });
 </script>
+
 @endsection

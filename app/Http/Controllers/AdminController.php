@@ -206,14 +206,31 @@ class AdminController extends Controller
         return view('admin.credit_sales', compact('sales'));
     }
 
+    public function getSaleItems($id)
+    {
+        $sale = SalesTransaction::with('salesItems')->find($id);
+    
+        if (!$sale) {
+            return response()->json([], 404);
+        }
+    
+        return response()->json($sale->salesItems);
+    } 
+
     public function markAsPaid($id)
     {
-        $sale = SaleTransaction::findOrFail($id);
-        $sale->remarks = "Paid";
+        $sale = SalesTransaction::find($id);
+        
+        if (!$sale) {
+            return response()->json(['success' => false, 'message' => 'Sale not found.']);
+        }
+
+        $sale->remarks = 'Paid';
         $sale->save();
 
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'message' => 'Sale marked as paid successfully.']);
     }
+
 
     public function productInventory(Request $request)
     {
