@@ -150,7 +150,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="price" class="form-label">Price of the Material</label>
-                        <input type="number" class="form-control" id="price" name="price" required>
+                        <input type="number" class="form-control" id="update_price" name="price" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -176,12 +176,12 @@
 
             const itemNameInput = updateStockModal.querySelector('#update_item_name');
             const quantityInput = updateStockModal.querySelector('#update_quantity');
-            const priceInput = updateStockModal.querySelector('#price');
+            const priceInput = updateStockModal.querySelector('#update_price');
 
             itemNameInput.value = itemName;
             quantityInput.setAttribute('min', 1); // Ensuring a valid minimum
             quantityInput.value = ''; // Clear previous input
-            priceInput.value = price;
+            priceInput.value = ''; // Clear previous input
 
             // Focus on the quantity input when the modal opens
             setTimeout(() => {

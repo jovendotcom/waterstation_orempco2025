@@ -155,6 +155,7 @@
                                 <th>Price</th>
                                 <th>Subtotal</th>
                                 <th>Material(s) Needed</th>
+                                <th>Adds on</th>
                             </tr>
                         </thead>
                         <tbody id="cart-items">

@@ -65,22 +65,22 @@
                         @endif
                     </td>
                     <td>
-                    <button class="btn btn-primary btn-sm view-sale" 
-                        data-id="{{ $sale->id }}" 
-                        data-po="{{ $sale->po_number }}" 
-                        data-customer="{{ $sale->customer->full_name }}"
-                        data-date="{{ $sale->created_at->format('Y-m-d H:i A') }}"
-                        data-total="{{ number_format($sale->total_amount, 2) }}"
-                        data-payment="{{ ucfirst($sale->payment_method) }}"
-                        data-credit-method="{{ $sale->credit_payment_method ?? 'N/A' }}"
-                        data-url="{{ route('sales.getItems', $sale->id) }}"> 
-                        <i class="fas fa-eye"></i> View
-                    </button>
-                    @if($sale->remarks !== 'Paid')
-                    <button class="btn btn-success btn-sm mark-paid" data-id="{{ $sale->id }}">
-                        <i class="fas fa-money-bill-wave"></i> Pay
-                    </button>
-                    @endif
+                        <button class="btn btn-primary btn-sm view-sale" 
+                            data-id="{{ $sale->id }}" 
+                            data-po="{{ $sale->po_number }}" 
+                            data-customer="{{ $sale->customer->full_name }}"
+                            data-date="{{ $sale->created_at->format('Y-m-d H:i A') }}"
+                            data-total="{{ number_format($sale->total_amount, 2) }}"
+                            data-payment="{{ ucfirst($sale->payment_method) }}"
+                            data-credit-method="{{ $sale->credit_payment_method ?? 'N/A' }}"
+                            data-url="{{ route('sales.getItems', $sale->id) }}"> 
+                            <i class="fas fa-eye"></i> View
+                        </button>   
+                        @if($sale->remarks !== 'Paid')
+                        <button class="btn btn-success btn-sm mark-paid" data-id="{{ $sale->id }}" data-url="{{ route('sales.markPaid', $sale->id) }}">
+                            <i class="fas fa-money-bill-wave"></i> Pay
+                        </button>
+                        @endif
                     </td>
                 </tr>
                 @endforeach
@@ -183,7 +183,7 @@
                 let saleId = button.dataset.id;
 
                 if (confirm("Are you sure you want to mark this sale as paid?")) {
-                    fetch(`/sales/${saleId}/mark-paid`, {
+                    fetch(`/admin/sales/${saleId}/mark-paid`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -191,8 +191,15 @@
                         },
                         body: JSON.stringify({})
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        console.log(response); // Log the response
+                        if (!response.ok) {
+                            throw new Error("Network response was not ok");
+                        }
+                        return response.json();
+                    })
                     .then(data => {
+                        console.log(data); // Log the data
                         if (data.success) {
                             alert("Sale marked as paid successfully.");
                             location.reload(); // Reload to update the UI

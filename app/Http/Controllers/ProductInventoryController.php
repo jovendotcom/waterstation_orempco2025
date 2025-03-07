@@ -168,11 +168,13 @@ class ProductInventoryController extends Controller
         $request->validate([
             'item_name' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
         ]);
 
         $stock = StocksCount::where('item_name', $request->item_name)->first();
         if ($stock) {
             $stock->quantity += $request->quantity;  // Adding to the current stock
+            $stock->price += $request->price;
             $stock->save();
 
             return redirect()->route('sales.stocksCount')->with('success', 'Stock updated successfully!');

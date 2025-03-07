@@ -94,16 +94,28 @@
 
 
 <script>
-document.getElementById('exportExcelBtn').addEventListener('click', function () {
-    let fromDate = document.getElementById('from_date').value;
-    let toDate = document.getElementById('to_date').value;
+    document.getElementById('exportExcelBtn').addEventListener('click', function () {
+        let fromDate = document.getElementById('from_date').value;
+        let toDate = document.getElementById('to_date').value;
 
-    if (!fromDate || !toDate) {
-        alert('Please select both From and To dates before exporting.');
-        return;
-    }
+        if (!fromDate || !toDate) {
+            alert('Please select both From and To dates before exporting.');
+            return;
+        }
 
-    window.location.href = `{{ route('sales.export.excel') }}?from_date=${fromDate}&to_date=${toDate}`;
-});
+        window.location.href = `{{ route('sales.export.excel') }}?from_date=${fromDate}&to_date=${toDate}`;
+    });
+
+    document.getElementById('exportPdfBtn').addEventListener('click', function () {
+        let fromDate = document.getElementById('from_date').value;
+        let toDate = document.getElementById('to_date').value;
+
+        if (!fromDate || !toDate) {
+            alert('Please select both From and To dates before exporting.');
+            return;
+        }
+
+        window.location.href = `{{ route('sales.export.pdf') }}?from_date=${fromDate}&to_date=${toDate}`;
+    });
 </script>
 @endsection

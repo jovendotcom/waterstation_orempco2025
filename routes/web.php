@@ -72,6 +72,7 @@ Route::prefix('sales')->group(function () {
 
         Route::GET('/salesreport', [SalesController::class, 'getReports'])->name('sales.sales_report');
         Route::get('/sales/export-excel', [SalesController::class, 'exportExcel'])->name('sales.export.excel');
+        Route::get('/sales/export-pdf', [SalesController::class, 'exportPdf'])->name('sales.export.pdf');
 
         Route::post('/customers', [CustomerListController::class, 'store'])->name('customers.store');
         Route::post('/customers/outside', [CustomerListController::class, 'storeOutside'])->name('customers.storeOutside');

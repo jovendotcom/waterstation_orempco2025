@@ -219,8 +219,10 @@ class AdminController extends Controller
 
     public function getCreditSales()
     {
+        // Fetch sales transactions with 'credit' payment method and 'Not Paid' remarks
         $sales = SalesTransaction::with(['customer', 'staff', 'salesItems'])
             ->where('payment_method', 'credit')
+            ->where('remarks', 'Not Paid') // Add this condition
             ->get();
     
         return view('admin.credit_sales', compact('sales'));
@@ -244,10 +246,10 @@ class AdminController extends Controller
         if (!$sale) {
             return response()->json(['success' => false, 'message' => 'Sale not found.']);
         }
-
-        $sale->remarks = 'Paid';
+    
+        $sale->update(['remarks' => 'Paid']);
         $sale->save();
-
+    
         return response()->json(['success' => true, 'message' => 'Sale marked as paid successfully.']);
     }
 
