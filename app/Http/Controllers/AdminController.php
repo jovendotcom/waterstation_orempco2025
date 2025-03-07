@@ -294,4 +294,9 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', 'Price updated successfully.');
     }
+
+    public function getCategories()
+    {
+        return view("admin.category_subcategory");
+    }
 }

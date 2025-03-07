@@ -46,6 +46,8 @@ Route::prefix('admin')->group(function () {
         Route::post('/products/addStock', [AdminController::class, 'addStock'])->name('products.addStockAdmin');
 
         Route::post('/products/update-price', [AdminController::class, 'updatePrice'])->name('products.updatePrice');
+
+        Route::GET('/categories', [AdminController::class, 'getCategories'])->name('admin.categories');
     });
 });
 
