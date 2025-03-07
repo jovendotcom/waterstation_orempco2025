@@ -26,8 +26,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
-            table-layout: fixed;
-            word-wrap: break-word;
+            table-layout: auto; /* Allow columns to adjust based on content */
         }
 
         table, th, td {
@@ -38,6 +37,7 @@
             padding: 4px 6px;
             text-align: left;
             font-size: 8px;
+            white-space: nowrap; /* Prevent text from wrapping */
         }
 
         th {
@@ -46,6 +46,7 @@
 
         .summary-table {
             margin-top: 20px;
+            width: 80%; /* Reduce table width */
         }
 
         .footer {
@@ -68,7 +69,9 @@
             <h4>Sta. Isabel, Calapan City, Oriental Mindoro</h4>
             <h4>CDA Registration No.: 9520-04002679</h4>
             <h4>NVAT-Exempt TIN: 004-175-226-000</h4>
-            <h3 style="margin-top: 10px;">Sales Report ({{ $fromDate }} - {{ $toDate }})</h3>
+            <h3 style="margin-top: 10px;">
+                Sales Report ({{ \Carbon\Carbon::parse($fromDate)->format('F j, Y') }} - {{ \Carbon\Carbon::parse($toDate)->format('F j, Y') }})
+            </h3>
         </div>
     </div>
 
@@ -160,9 +163,9 @@
     <table class="summary-table">
         <thead>
             <tr>
-                <th>Item Name</th>
-                <th>Quantity Sold</th>
-                <th>Total Sales</th>
+                <th style="width: 50%;">Item Name</th>
+                <th style="width: 25%;">Quantity Sold</th>
+                <th style="width: 25%;">Total Sales</th>
             </tr>
         </thead>
         <tbody>
@@ -195,10 +198,10 @@
     <table class="summary-table">
         <thead>
             <tr>
-                <th>Charge Type</th>
-                <th>Total Sales</th>
-                <th>Member</th>
-                <th>Non-Member</th>
+                <th style="width: 40%;">Charge Type</th>
+                <th style="width: 20%;">Total Sales</th>
+                <th style="width: 20%;">Member</th>
+                <th style="width: 20%;">Non-Member</th>
             </tr>
         </thead>
         <tbody>
