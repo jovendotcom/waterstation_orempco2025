@@ -20,6 +20,7 @@ use App\Exports\SalesReportExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Category;
 use App\Models\Subcategory;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
@@ -355,16 +356,23 @@ class AdminController extends Controller
     public function storeSubCategories(Request $request)
     {
         $request->validate([
-            'sub_name' => 'required|string|max:255|unique:subcategories,sub_name', // Update this
+            'sub_name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('subcategories')->where(function ($query) use ($request) {
+                    return $query->where('category_id', $request->category_id);
+                }),
+            ],
             'category_id' => 'required|exists:categories,id',
         ], [
-            'sub_name.required' => 'The Subcategory Name field is required.', // Update this
-            'sub_name.unique' => 'The Subcategory Name already exists.', // Update this
+            'sub_name.required' => 'The Subcategory Name field is required.',
+            'sub_name.unique' => 'The Subcategory Name already exists for this category.',
             'category_id.required' => 'The Parent Category field is required.',
             'category_id.exists' => 'The selected Parent Category does not exist.',
         ]);
     
-        Subcategory::create($request->only('sub_name', 'category_id')); // Update this
+        Subcategory::create($request->only('sub_name', 'category_id'));
     
         return redirect()->route('admin.categories')->with('success', 'Subcategory added successfully!');
     }
@@ -373,17 +381,24 @@ class AdminController extends Controller
     {
         $request->validate([
             'id' => 'required|exists:subcategories,id',
-            'sub_name' => 'required|string|max:255|unique:subcategories,sub_name,' . $request->id, // Update this
+            'sub_name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('subcategories')->where(function ($query) use ($request) {
+                    return $query->where('category_id', $request->category_id);
+                })->ignore($request->id),
+            ],
             'category_id' => 'required|exists:categories,id',
         ], [
-            'sub_name.required' => 'The Subcategory Name field is required.', // Update this
-            'sub_name.unique' => 'The Subcategory Name already exists.', // Update this
+            'sub_name.required' => 'The Subcategory Name field is required.',
+            'sub_name.unique' => 'The Subcategory Name already exists for this category.',
             'category_id.required' => 'The Parent Category field is required.',
             'category_id.exists' => 'The selected Parent Category does not exist.',
         ]);
     
         $subcategory = Subcategory::find($request->id);
-        $subcategory->update($request->only('sub_name', 'category_id')); // Update this
+        $subcategory->update($request->only('sub_name', 'category_id'));
     
         return redirect()->route('admin.categories')->with('success', 'Subcategory updated successfully!');
     }
