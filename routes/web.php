@@ -48,6 +48,14 @@ Route::prefix('admin')->group(function () {
         Route::post('/products/update-price', [AdminController::class, 'updatePrice'])->name('products.updatePrice');
 
         Route::GET('/categories', [AdminController::class, 'getCategories'])->name('admin.categories');
+        Route::post('/categories/store', [AdminController::class, 'storeCategories'])->name('admin.category.store');
+        Route::put('/categories/update', [AdminController::class, 'updateCategories'])->name('admin.category.update');
+        Route::delete('/categories/destroy/{id}', [AdminController::class, 'destroyCategories'])->name('admin.category.destroy');
+
+        // Subcategory Routes
+        Route::post('/subcategories/store', [AdminController::class, 'storeSubCategories'])->name('admin.subcategory.store');
+        Route::put('/subcategories/update', [AdminController::class, 'updateSubCategories'])->name('admin.subcategory.update');
+        Route::delete('/subcategories/destroy/{id}', [AdminController::class, 'destroySubCategories'])->name('admin.subcategory.destroy');
     });
 });
 

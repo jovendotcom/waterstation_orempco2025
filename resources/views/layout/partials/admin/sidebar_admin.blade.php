@@ -28,7 +28,7 @@
 
             <a class="nav-link text-white {{ request()->routeIs('admin.categories') ? 'active' : '' }}" href="{{ route('admin.categories') }}">
                 <div class="sb-nav-link-icon text-white"><i class="fa-sharp-duotone fa-solid fa-droplet"></i></div>
-                Category
+                Category Management
             </a>
 
             <a class="nav-link text-white {{ request()->routeIs('admin.productInventory') ? 'active' : '' }}" href="{{ route('admin.productInventory') }}">

@@ -208,6 +208,16 @@ class SalesController extends Controller
                 $quantityPurchased = $item['qty'];
     
                 if ($product) {
+                    // Check if the product has a quantity and deduct if necessary
+                    if (!is_null($product->quantity)) {
+                        if ($product->quantity >= $quantityPurchased) {
+                            $product->quantity -= $quantityPurchased;
+                            $product->save();
+                        } else {
+                            $errorMessages[] = "{$product->product_name} is out of stock. Needed: $quantityPurchased, Available: {$product->quantity}";
+                        }
+                    }
+    
                     if (!empty($product->items_needed)) {
                         $itemsNeeded = json_decode($product->items_needed, true);
     
@@ -219,7 +229,6 @@ class SalesController extends Controller
                         }
     
                         foreach ($itemsNeeded as $neededItemId => $neededItemName) {
-                            // ✅ Hanapin ang tamang material sa `StocksCount`
                             $material = StocksCount::where('item_name', $neededItemName)->first();
     
                             if (!$material) {
@@ -229,15 +238,12 @@ class SalesController extends Controller
                                 ], 422);
                             }
     
-                            // ✅ KUNIN ANG TAMANG QUANTITY NG MATERIAL MULA SA FRONTEND CART
-                            $materialQtyNeeded = $item['materials'][$neededItemName] ?? 1; // Get displayed quantity
+                            $materialQtyNeeded = $item['materials'][$neededItemName] ?? 1;
     
-                            // ✅ Check stock availability at ibawas ang tamang quantity
                             if ($material->quantity >= $materialQtyNeeded) {
                                 $material->quantity -= $materialQtyNeeded;
                                 $material->save();
                             } else {
-                                // Kulang ang stock, mag-error
                                 $availableQty = $material->quantity;
                                 $errorMessages[] = "{$neededItemName} is out of stock. Needed: $materialQtyNeeded, Available: $availableQty";
                             }
@@ -255,7 +261,6 @@ class SalesController extends Controller
                 ]);
             }
     
-            // ❌ CANCEL TRANSACTION KUNG MAY KULANG NA MATERIALS
             if (!empty($errorMessages)) {
                 DB::rollBack();
                 return response()->json([

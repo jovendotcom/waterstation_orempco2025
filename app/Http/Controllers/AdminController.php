@@ -18,6 +18,8 @@ use Session;
 use App\Models\MaterialRequirement;
 use App\Exports\SalesReportExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\Category;
+use App\Models\Subcategory;
 
 class AdminController extends Controller
 {
@@ -296,7 +298,102 @@ class AdminController extends Controller
     }
 
     public function getCategories()
+    {   
+
+        $categories = Category::all();
+        $subcategories = Subcategory::with('category')->get();
+
+        return view("admin.category_subcategory" , compact('categories', 'subcategories'));
+    
+    }
+
+    public function storeCategories(Request $request)
     {
-        return view("admin.category_subcategory");
+        $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name',
+        ], [
+            'name.required' => 'The Category Name field is required.',
+            'name.string' => 'The Category Name must be a string.',
+            'name.max' => 'The Category Name must not exceed 255 characters.',
+            'name.unique' => 'The Category Name already exists.',
+        ]);
+    
+        Category::create($request->only('name'));
+    
+        return redirect()->route('admin.categories')->with('success', 'Category added successfully!');
+    }
+    
+    public function updateCategories(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:categories,id',
+            'name' => 'required|string|max:255|unique:categories,name,' . $request->id,
+        ], [
+            'id.required' => 'The Category ID is required.',
+            'id.exists' => 'The selected Category does not exist.',
+            'name.required' => 'The Category Name field is required.',
+            'name.string' => 'The Category Name must be a string.',
+            'name.max' => 'The Category Name must not exceed 255 characters.',
+            'name.unique' => 'The Category Name already exists.',
+        ]);
+    
+        $category = Category::find($request->id);
+        $category->update($request->only('name'));
+    
+        return redirect()->route('admin.categories')->with('success', 'Category updated successfully!');
+    }
+
+    // Delete Category
+    public function destroyCategories($id)
+    {
+        $category = Category::findOrFail($id);
+        $category->delete();
+
+        return redirect()->route('admin.categories')->with('success', 'Category deleted successfully!');
+    }
+
+    public function storeSubCategories(Request $request)
+    {
+        $request->validate([
+            'sub_name' => 'required|string|max:255|unique:subcategories,sub_name', // Update this
+            'category_id' => 'required|exists:categories,id',
+        ], [
+            'sub_name.required' => 'The Subcategory Name field is required.', // Update this
+            'sub_name.unique' => 'The Subcategory Name already exists.', // Update this
+            'category_id.required' => 'The Parent Category field is required.',
+            'category_id.exists' => 'The selected Parent Category does not exist.',
+        ]);
+    
+        Subcategory::create($request->only('sub_name', 'category_id')); // Update this
+    
+        return redirect()->route('admin.categories')->with('success', 'Subcategory added successfully!');
+    }
+    
+    public function updateSubCategories(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:subcategories,id',
+            'sub_name' => 'required|string|max:255|unique:subcategories,sub_name,' . $request->id, // Update this
+            'category_id' => 'required|exists:categories,id',
+        ], [
+            'sub_name.required' => 'The Subcategory Name field is required.', // Update this
+            'sub_name.unique' => 'The Subcategory Name already exists.', // Update this
+            'category_id.required' => 'The Parent Category field is required.',
+            'category_id.exists' => 'The selected Parent Category does not exist.',
+        ]);
+    
+        $subcategory = Subcategory::find($request->id);
+        $subcategory->update($request->only('sub_name', 'category_id')); // Update this
+    
+        return redirect()->route('admin.categories')->with('success', 'Subcategory updated successfully!');
+    }
+
+    // Delete Subcategory
+    public function destroySubCategories($id)
+    {
+        $subcategory = Subcategory::findOrFail($id);
+        $subcategory->delete();
+
+        return redirect()->route('admin.categories')->with('success', 'Subcategory deleted successfully!');
     }
 }
