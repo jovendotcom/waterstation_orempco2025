@@ -14,10 +14,15 @@ class StocksCount extends Model
     protected $fillable = [
         'item_name',
         'quantity',
+        'unit_of_measurement',
         'price',
         'remarks',
+        'category_id', // Add this
     ];
 
+    // Relationship: A stock item belongs to a category
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }
-
-

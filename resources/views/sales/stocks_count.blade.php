@@ -63,9 +63,10 @@
             <table id="datatablesSimple" class="table table-bordered table-striped">
                 <thead>
                     <tr>
+                        <th>Category</th>
                         <th>Item Name</th>
                         <th>Qty</th>
-                        <th>Price</th>
+                        <th>Cost</th>
                         <th>Remarks</th>
                         <th>Actions</th>
                     </tr>
@@ -73,8 +74,9 @@
                 <tbody id="stockTableBody">
                     @foreach ($stocks as $stock)
                         <tr>
+                            <td>{{ $stock->category->name ?? 'N/A' }}</td>
                             <td>{{ $stock->item_name }}</td>
-                            <td>{{ $stock->quantity }} piece(s)</td>
+                            <td>{{ $stock->quantity }} {{ $stock->unit_of_measurement }}</td>
                             <td>₱{{ number_format($stock->price, 2) }}</td>
                             <td>
                                 @if($stock->quantity > 0)
@@ -106,14 +108,40 @@
             <form action="{{ route('stocks.store') }}" method="POST">
                 @csrf
                 <div class="modal-body">
+                    <!-- Category Dropdown -->
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">Category</label>
+                        <select class="form-select" id="category_id" name="category_id" required>
+                            <option value="">Select a Category</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Item Name -->
                     <div class="mb-3">
                         <label for="item_name" class="form-label">Material Name</label>
                         <input type="text" class="form-control" id="item_name" name="item_name" required>
                     </div>
+
+                    <!-- Quantity -->
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Quantity</label>
                         <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
                     </div>
+
+                    <div class="mb-3">
+                        <label for="unit_of_measurement" class="form-label">Unit of Measurement</label>
+                        <select class="form-select" id="unit_of_measurement" name="unit_of_measurement" required>
+                            <option value="">Select a Unit</option>
+                            @foreach($unitsOfMeasurement as $key => $unit)
+                                <option value="{{ $key }}">{{ $unit }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Price -->
                     <div class="mb-3">
                         <label for="price" class="form-label">Price of the Material</label>
                         <input type="number" class="form-control" id="price" name="price" required>

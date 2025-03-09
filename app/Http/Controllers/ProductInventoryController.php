@@ -17,6 +17,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\StocksCountExport;
 use PDF;
 use Session;
+use App\Models\Category;
+use App\Models\SubCategory;
 
 class ProductInventoryController extends Controller
 {
@@ -119,7 +121,20 @@ class ProductInventoryController extends Controller
     public function countStocks(Request $request)
     {
         $stocks = StocksCount::orderBy('item_name', 'asc')->get(); // Fetch all stock counts
-        return view('sales.stocks_count', compact('stocks'));
+        $categories = Category::all();
+
+        // Define possible units of measurement
+        $unitsOfMeasurement = [
+            'grams' => 'Grams',
+            'liters' => 'Liters',
+            'milliliters' => 'Milliliters',
+            'pieces' => 'Pieces',
+            'kilograms' => 'Kilograms',
+            'cups' => 'Cups',
+            'tablespoons' => 'Tablespoons',
+            'teaspoons' => 'Teaspoons',
+        ];
+        return view('sales.stocks_count', compact('stocks', 'categories', 'unitsOfMeasurement'));
     }
 
     public function storeStockCount(Request $request)
@@ -127,17 +142,21 @@ class ProductInventoryController extends Controller
         $request->validate([
             'item_name' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1',
+            'unit_of_measurement' => 'required|string|max:50', // Add this
             'price' => 'required|numeric|min:0',
             'remarks' => 'nullable|string|max:500',
+            'category_id' => 'required|exists:categories,id',
         ]);
-
+    
         StocksCount::create([
             'item_name' => $request->item_name,
             'quantity' => $request->quantity,
+            'unit_of_measurement' => $request->unit_of_measurement, // Add this
             'price' => $request->price,
             'remarks' => $request->remarks,
+            'category_id' => $request->category_id,
         ]);
-
+    
         return redirect()->route('sales.stocksCount')->with('success', 'Stock added successfully!');
     }
 
