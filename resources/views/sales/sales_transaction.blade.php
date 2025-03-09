@@ -74,10 +74,10 @@
                 <div class="row row-cols-1 row-cols-md-3 g-4">
                     @foreach($products as $product)
                     <div class="col">
-                        <div class="card h-100 position-relative" style="overflow: hidden; box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2); border-radius: 10px;">
+                        <div class="card h-100 position-relative" data-id="{{ $product->id }}" style="overflow: hidden; box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2); border-radius: 10px;">
                             <!-- Out of Stock Overlay -->
                             @if($product->quantity === 0)
-                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                            <div id="out-of-stock-{{ $product->id }}" class="out-of-stock-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                                         background: rgba(255, 255, 255, 0.7); /* Transparent White */
                                         color: red; font-size: 30px; font-weight: 900; 
                                         display: flex; align-items: center; justify-content: center;
@@ -692,6 +692,54 @@ $(document).ready(function () {
     });
 
     function resetSummary() {
+        // Update product quantities in real-time
+        cart.forEach(item => {
+            const productId = item.id;
+            const quantityPurchased = item.qty;
+
+            // Find the product card and update its quantity
+            const productCard = document.querySelector(`.card[data-id="${productId}"]`);
+            if (productCard) {
+                const stockElement = productCard.querySelector('.card-text span');
+                if (stockElement) {
+                    const currentQuantity = parseInt(stockElement.textContent, 10);
+                    const updatedQuantity = currentQuantity - quantityPurchased;
+
+                    // Update the quantity display
+                    stockElement.textContent = updatedQuantity;
+
+                    // Update the stock text color based on the updated quantity
+                    const stockText = stockElement.closest('p');
+                    if (stockText) {
+                        stockText.style.color = updatedQuantity === 0 ? 'red' : 'green';
+                    }
+
+                    // Disable the "Buy" button if the product is out of stock
+                    const buyButton = productCard.querySelector('.buy-btn');
+                    if (buyButton) {
+                        if (updatedQuantity === 0) {
+                            buyButton.disabled = true;
+                            buyButton.textContent = 'Out of Stock';
+                        } else {
+                            buyButton.disabled = false;
+                            buyButton.textContent = 'Buy';
+                        }
+                    }
+
+                    // Show or hide the "Out of Stock" overlay based on the updated quantity
+                    const outOfStockOverlay = productCard.querySelector('.out-of-stock-overlay');
+                    if (outOfStockOverlay) {
+                        if (updatedQuantity === 0) {
+                            outOfStockOverlay.style.display = 'flex'; // Show the overlay
+                        } else {
+                            outOfStockOverlay.style.display = 'none'; // Hide the overlay
+                        }
+                    }
+                }
+            }
+        });
+
+        // Reset the cart and other fields
         cart = [];
         updateCartUI();
         $('#customer').val('').trigger('change');
