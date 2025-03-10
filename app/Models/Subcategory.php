@@ -17,4 +17,10 @@ class Subcategory extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    // Relationship: A Subcategory has many Products
+    public function products()
+    {
+        return $this->hasMany(ProductForSale::class, 'subcategory_id');
+    }
 }

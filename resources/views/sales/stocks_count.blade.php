@@ -64,7 +64,7 @@
                 <thead>
                     <tr>
                         <th>Category</th>
-                        <th>Item Name</th>
+                        <th>Material Name</th>
                         <th>Qty</th>
                         <th>Cost</th>
                         <th>Remarks</th>

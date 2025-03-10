@@ -261,9 +261,84 @@ class AdminController extends Controller
     {
         $products = ProductForSale::all();
         $stocks = StocksCount::all(); // Fetch available stock items
+        $subcategories = Subcategory::all(); // Fetch all subcategories
+        $sizeOptions = ['Small', 'Medium', 'Large']; // Example size options
+        $unitsOfMeasurement = ['kg', 'g', 'L', 'mL', 'pcs']; // Example units of measurement
     
-        return view('admin.product_inventory', compact('products', 'stocks'));
-    } 
+        return view('admin.product_inventory', compact('products', 'stocks', 'subcategories', 'sizeOptions', 'unitsOfMeasurement'));
+    }
+
+    public function store(Request $request)
+    {
+        // Validate request
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'quantity' => 'nullable|integer|min:0',
+            'product_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'items_needed' => 'nullable|array',
+            'subcategory_id' => 'required|exists:subcategories,id', // Validate subcategory
+            'size_options' => 'nullable|string', // Validate size options
+            'unit_of_measurement' => 'nullable|string', // Validate unit of measurement
+        ]);
+    
+        // Check if the product with the same name and price already exists
+        $existingProduct = ProductForSale::where('product_name', $request->product_name)
+                                          ->where('price', $request->price)
+                                          ->first();
+    
+        if ($existingProduct) {
+            return redirect()->back()->with('fail', 'A product with the same name and price already exists.');
+        }
+    
+        // Handle product image upload
+        $imagePath = null;
+        if ($request->hasFile('product_image')) {
+            $imagePath = $request->file('product_image')->store('product_images', 'public');
+        }
+    
+        // Decode selected items
+        $itemsNeeded = $request->items_needed ?? [];
+    
+        // Check stock availability
+        $productQuantity = $request->quantity ?? null;
+        foreach ($itemsNeeded as $stockId => $stockName) {
+            $stock = StocksCount::find($stockId);
+    
+            if (!$stock) {
+                return redirect()->back()->with('fail', "Stock item '$stockName' not found.");
+            }
+    
+            if ($productQuantity !== null && $stock->quantity < $productQuantity) {
+                return redirect()->back()->with('fail', "Not enough stock for '$stock->item_name'. Available: $stock->quantity, Required: $productQuantity.");
+            }
+        }
+    
+        // Create new product
+        $product = ProductForSale::create([
+            'product_name' => $request->product_name,
+            'price' => $request->price,
+            'quantity' => $productQuantity,
+            'product_image' => $imagePath,
+            'items_needed' => json_encode($itemsNeeded),
+            'subcategory_id' => $request->subcategory_id, // Add subcategory
+            'size_options' => $request->size_options, // Add size options
+            'unit_of_measurement' => $request->unit_of_measurement, // Add unit of measurement
+        ]);
+    
+        // Deduct stock quantities if product has a set quantity
+        if ($productQuantity !== null) {
+            foreach ($itemsNeeded as $stockId => $stockName) {
+                $stock = StocksCount::find($stockId);
+                if ($stock) {
+                    $stock->quantity -= $productQuantity;
+                    $stock->save();
+                }
+            }
+        }
+    
+        return redirect()->back()->with('success', 'Product added successfully.');
+    }
 
     public function addStock(Request $request)
     {
