@@ -262,10 +262,11 @@ class AdminController extends Controller
         $products = ProductForSale::all();
         $stocks = StocksCount::all(); // Fetch available stock items
         $subcategories = Subcategory::all(); // Fetch all subcategories
-        $sizeOptions = ['Small', 'Medium', 'Large']; // Example size options
+        $sizeOptions = ['Small', 'Medium', 'Large', 'Solo', 'Jumbo']; // Example size options
         $unitsOfMeasurement = ['kg', 'g', 'L', 'mL', 'pcs']; // Example units of measurement
+        $categories = Category::with('stockCounts')->get();
     
-        return view('admin.product_inventory', compact('products', 'stocks', 'subcategories', 'sizeOptions', 'unitsOfMeasurement'));
+        return view('admin.product_inventory', compact('products', 'stocks', 'subcategories', 'sizeOptions', 'unitsOfMeasurement', 'categories'));
     }
 
     public function store(Request $request)
@@ -277,6 +278,7 @@ class AdminController extends Controller
             'quantity' => 'nullable|integer|min:0',
             'product_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'items_needed' => 'nullable|array',
+            'material_quantities' => 'nullable|array', // Validate material quantities
             'subcategory_id' => 'required|exists:subcategories,id', // Validate subcategory
             'size_options' => 'nullable|string', // Validate size options
             'unit_of_measurement' => 'nullable|string', // Validate unit of measurement
@@ -299,6 +301,7 @@ class AdminController extends Controller
     
         // Decode selected items
         $itemsNeeded = $request->items_needed ?? [];
+        $materialQuantities = $request->material_quantities ?? [];
     
         // Check stock availability
         $productQuantity = $request->quantity ?? null;
@@ -321,6 +324,7 @@ class AdminController extends Controller
             'quantity' => $productQuantity,
             'product_image' => $imagePath,
             'items_needed' => json_encode($itemsNeeded),
+            'material_quantities' => json_encode($materialQuantities),
             'subcategory_id' => $request->subcategory_id, // Add subcategory
             'size_options' => $request->size_options, // Add size options
             'unit_of_measurement' => $request->unit_of_measurement, // Add unit of measurement

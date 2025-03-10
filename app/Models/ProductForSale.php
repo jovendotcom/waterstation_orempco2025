@@ -19,6 +19,7 @@ class ProductForSale extends Model
         'category_id',
         'subcategory_id',
         'size_options',
+        'material_quantities',
         'add_ons',
         'unit_of_measurement', 
         'items_needed' // JSON array of items needed

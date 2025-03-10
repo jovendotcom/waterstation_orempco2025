@@ -94,7 +94,7 @@
                                 style="max-height: 150px; width: auto; margin: 0 auto; display: block; border-radius: 10px 10px 0 0;">
 
                             <div class="card-body">
-                                <h6 class="card-title">{{ $product->product_name }}</h6>
+                                <h6 class="card-title">{{ $product->product_name }} {{ $product->size_options }}</h6>
                                 <p class="card-text" style="font-weight: bold; color: {{ $product->quantity === 0 ? 'red' : 'green' }};">
                                     Stock Available: <span>{{ $product->quantity ?? 'N/A' }}</span>
                                 </p>

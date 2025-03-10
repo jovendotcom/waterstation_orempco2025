@@ -69,15 +69,18 @@
                                     <span>No Image</span>
                                 @endif
                             </td>
-                            <td>{{ $product->product_name }}</td>
+                            <td>{{ $product->product_name }} {{ $product->size_options }}</td>
                             <td>
                                 @php
                                     $items = is_array($product->items_needed) ? $product->items_needed : json_decode($product->items_needed, true);
+                                    $materialQuantities = is_array($product->material_quantities) ? $product->material_quantities : json_decode($product->material_quantities, true);
                                 @endphp
                                 @if(!empty($items))
                                     <ul class="list-unstyled mb-0">
-                                        @foreach($items as $item)
-                                            <li>{{ $item }}</li>
+                                        @foreach($items as $stockId => $itemName)
+                                            <li>
+                                                {{ $itemName }} - {{ $materialQuantities[$stockId] ?? 0 }} {{ $stocks->find($stockId)->unit_of_measurement ?? '' }}
+                                            </li>
                                         @endforeach
                                     </ul>
                                 @else
@@ -121,16 +124,13 @@
                         </tr>
                     @endforelse
                 </tbody>
-
             </table>
         </div>
     </div>
 
 <!-- Add New Product Modal -->
-<!-- Add New Product Modal -->
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
-    <!-- Use a custom width for the modal -->
-    <div class="modal-dialog" style="max-width: 900px;"> <!-- Adjust max-width as needed -->
+    <div class="modal-dialog" style="max-width: 900px;">
         <div class="modal-content">
             <form action="{{ route('products.storeProductAdmin') }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -215,22 +215,33 @@
                         </div>
                     </div>
 
-                    <!-- Items Needed Field (Full Width) -->
+                    <!-- Items Needed Field (Grouped by Category) -->
                     <div class="row">
                         <div class="col-12">
-                            <div class="mb-3">
-                                <label class="form-label">Select Material(s) Needed for this product:</label>
-                                <div class="border p-2 rounded" style="max-height: 150px; overflow-y: auto;">
-                                    @foreach($stocks->sortBy('item_name') as $stock)
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="items_needed[{{ $stock->id }}]" value="{{ $stock->item_name }}">
-                                            <label class="form-check-label" for="stock_{{ $stock->id }}">
-                                                <strong class="text-black">{{ $stock->item_name }}</strong> <span class="text-success">(Available: {{ $stock->quantity }})</span>
-                                            </label>
-                                        </div>
-                                    @endforeach
+                            <label class="form-label">Select Material(s) Needed for this product:</label>
+                            @foreach($categories as $category)
+                                <div class="mb-3">
+                                    <h6 class="fw-bold">{{ $category->name }}</h6>
+                                    <div class="border p-2 rounded" style="max-height: 150px; overflow-y: auto;">
+                                        @foreach($stocks->where('category_id', $category->id)->sortBy('item_name') as $stock)
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <!-- Material Checkbox and Label -->
+                                                <div class="form-check">
+                                                    <input class="form-check-input material-checkbox" type="checkbox" name="items_needed[{{ $stock->id }}]" value="{{ $stock->item_name }}" data-unit="{{ $stock->unit_of_measurement }}">
+                                                    <label class="form-check-label" for="stock_{{ $stock->id }}">
+                                                        <strong class="text-black">{{ $stock->item_name }}</strong> <span class="text-success">(Available: {{ $stock->quantity }} {{ $stock->unit_of_measurement }})</span>
+                                                    </label>
+                                                </div>
+                                                <!-- Quantity Input (Hidden by Default) -->
+                                                <div class="input-group quantity-input" style="width: 150px; display: none;">
+                                                    <input type="number" class="form-control" name="material_quantities[{{ $stock->id }}]" placeholder="Quantity" min="1">
+                                                    <span class="input-group-text">{{ $stock->unit_of_measurement }}</span>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
@@ -331,6 +342,20 @@
             document.getElementById('update_product_id').value = button.getAttribute('data-id');
             document.getElementById('update_product_name').textContent = button.getAttribute('data-name');
             document.getElementById('new_price').value = button.getAttribute('data-price');
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Handle material checkbox click
+        document.querySelectorAll('.material-checkbox').forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                const quantityInput = checkbox.closest('.d-flex').querySelector('.quantity-input');
+                if (checkbox.checked) {
+                    quantityInput.style.display = 'flex'; // Show quantity input
+                } else {
+                    quantityInput.style.display = 'none'; // Hide quantity input
+                }
+            });
         });
     });
 </script>

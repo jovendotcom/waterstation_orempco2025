@@ -23,4 +23,10 @@ class Category extends Model
     {
         return $this->hasMany(ProductForSale::class, 'category_id');
     }
+
+    // Relationship: A Category has many Stock Counts
+    public function stockCounts()
+    {
+        return $this->hasMany(StocksCount::class);
+    }
 }
