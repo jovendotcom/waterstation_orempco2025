@@ -233,7 +233,7 @@
                                                     </label>
                                                 </div>
                                                 <!-- Quantity Input (Hidden by Default) -->
-                                                <div class="input-group quantity-input" style="width: 150px; display: none;">
+                                                <div class="input-group quantity-input" style="width: 180px; display: none;">
                                                     <input type="number" class="form-control" name="material_quantities[{{ $stock->id }}]" placeholder="Quantity" min="1">
                                                     <span class="input-group-text">{{ $stock->unit_of_measurement }}</span>
                                                 </div>

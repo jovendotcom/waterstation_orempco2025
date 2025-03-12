@@ -107,6 +107,7 @@
                                         data-price="{{ $product->price }}"
                                         data-stock="{{ $product->quantity ?? 'N/A' }}" 
                                         data-items-needed="{{ $product->items_needed }}"
+                                        data-material-quantities="{{ $product->material_quantities }}"
                                         {{ $product->quantity === 0 ? 'disabled' : '' }}>
                                         Buy
                                     </button>
@@ -311,8 +312,9 @@ $(document).ready(function () {
 
 // Cart handling
 let cart = []; // Array of objects { id, name, price, qty, subtotal, stock }
-function addToCart(productId, productName, productPrice, itemsNeededJson, stockAvailable) {
-    console.log("Adding to cart:", { productId, productName, productPrice, itemsNeededJson, stockAvailable });
+
+function addToCart(productId, productName, productPrice, itemsNeededJson, stockAvailable, materialQuantitiesJson) {
+    console.log("Adding to cart:", { productId, productName, productPrice, itemsNeededJson, stockAvailable, materialQuantitiesJson });
 
     if (!productId || !productName || isNaN(productPrice) || productPrice <= 0) {
         console.error("Invalid product data", { productId, productName, productPrice });
@@ -320,15 +322,18 @@ function addToCart(productId, productName, productPrice, itemsNeededJson, stockA
         return;
     }
 
-    // Parse items_needed JSON to get material names
+    // Parse items_needed and material_quantities JSON
     let itemsNeeded = itemsNeededJson ? JSON.parse(itemsNeededJson) : {};
+    let materialQuantities = materialQuantitiesJson ? JSON.parse(materialQuantitiesJson) : {};
 
-    // Transform itemsNeeded to map indexes to names
+    // Initialize materials with quantities from the database
     let materials = {};
     for (let key in itemsNeeded) {
-        materials[itemsNeeded[key]] = 1; // Initialize material count as 1
+        let materialName = itemsNeeded[key];
+        materials[materialName] = materialQuantities[key] || 1; // Use materialQuantities from the database
     }
 
+    // Check if product already exists in cart
     let product = cart.find(item => item.id === productId);
     let currentQtyInCart = product ? product.qty : 0;
     let newQty = currentQtyInCart + 1;
@@ -344,13 +349,6 @@ function addToCart(productId, productName, productPrice, itemsNeededJson, stockA
     if (product) {
         product.qty = newQty;
         product.subtotal = product.price * product.qty;
-
-        // Update material quantities if stock is "N/A"
-        if (stockAvailable === "N/A") {
-            for (let materialName in product.materials) {
-                product.materials[materialName] = product.qty;
-            }
-        }
     } else {
         cart.push({
             id: productId,
@@ -358,64 +356,17 @@ function addToCart(productId, productName, productPrice, itemsNeededJson, stockA
             price: productPrice,
             qty: 1,
             subtotal: productPrice,
-            materials: materials, // Use material names
+            materials: materials, // Material quantities from the database
+            materialAdjustments: Object.keys(materials).reduce((acc, key) => {
+                acc[key] = 1; // Initialize with the product quantity
+                return acc;
+            }, {}), // Adjusted quantities for the cart
             stock: stockAvailable
         });
     }
 
     updateCartUI();
 }
-
-
-function updateCartUI() {
-    const cartSummaryElement = document.getElementById("cart-summary");
-    cartSummaryElement.innerHTML = ""; // Clear previous content
-
-    cart.forEach(product => {
-        const productRow = document.createElement("div");
-        productRow.classList.add("cart-row");
-
-        productRow.innerHTML = `
-            <div>${product.name}</div>
-            <div>Quantity: ${product.qty}</div>
-            <div>Subtotal: ₱${product.subtotal.toFixed(2)}</div>
-            <div>
-                Material(s) Needed:
-                <ul>
-                    ${Object.entries(product.materials).map(([material, qty]) => `
-                        <li>
-                            ${material}: 
-                            <button onclick="decreaseMaterial('${product.id}', '${material}')">-</button>
-                            ${qty}
-                            <button onclick="increaseMaterial('${product.id}', '${material}')">+</button>
-                        </li>
-                    `).join("")}
-                </ul>
-            </div>
-        `;
-
-        cartSummaryElement.appendChild(productRow);
-    });
-}
-
-function decreaseMaterial(productId, materialName) {
-    let product = cart.find(item => item.id === productId);
-    if (product && product.materials[materialName] > 1) {
-        product.materials[materialName]--;
-        product.qty--; // Match product quantity with material count
-        updateCartUI();
-    }
-}
-
-function increaseMaterial(productId, materialName) {
-    let product = cart.find(item => item.id === productId);
-    if (product) {
-        product.materials[materialName]++;
-        product.qty++; // Match product quantity with material count
-        updateCartUI();
-    }
-}
-
 
 function updateCartUI() {
     let cartItemsContainer = document.getElementById("cart-items");
@@ -432,13 +383,19 @@ function updateCartUI() {
 
         if (item.stock === "N/A" && Object.keys(item.materials).length > 0) {
             for (let materialName in item.materials) {
+                let materialQty = item.materials[materialName]; // Quantity from the database
+                let adjustedQty = item.materialAdjustments[materialName] || item.qty; // Adjusted quantity (default to product quantity)
+
+                // Calculate the total material quantity based on product quantity
+                let totalMaterialQty = materialQty * adjustedQty;
+
                 materialsListHTML += `
                     <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <span>${materialName}:</span> <!-- Material Name -->
+                        <span>${materialName}-${totalMaterialQty}: </span> <!-- Material Name and Total Quantity -->
                         <div style="display: flex; align-items: center; gap: 5px;">
-                            <button class="btn btn-sm btn-danger" onclick="changeItemNeededQty(${item.id}, '${materialName}', -1)">-</button>
-                            <span id="item-needed-${item.id}-${materialName}" style="min-width: 30px; text-align: center;">${item.materials[materialName]}</span>
-                            <button class="btn btn-sm btn-success" onclick="changeItemNeededQty(${item.id}, '${materialName}', 1)">+</button>
+                            <button class="btn btn-sm btn-danger" onclick="changeMaterialAdjustment(${item.id}, '${materialName}', -1)">-</button>
+                            <span id="item-adjusted-${item.id}-${materialName}" style="min-width: 30px; text-align: center;">${adjustedQty}</span>
+                            <button class="btn btn-sm btn-success" onclick="changeMaterialAdjustment(${item.id}, '${materialName}', 1)">+</button>
                         </div>
                     </div>
                 `;
@@ -468,69 +425,67 @@ function updateCartUI() {
     document.getElementById("total-amount").textContent = totalAmount.toFixed(2);
 }
 
-let selectedProductId = null;
-let selectedMaterialName = null;
-let selectedChange = 0;
+function changeMaterialAdjustment(productId, materialName, change) {
+    if (change === 1) {
+        // Show the modal for increasing quantity
+        showIncreaseModal(productId, materialName);
+    } else {
+        // Directly decrease the quantity (no modal needed)
+        let product = cart.find(item => item.id === productId);
+        if (product) {
+            if (!product.materialAdjustments) product.materialAdjustments = {};
+            if (!product.materialAdjustments[materialName]) product.materialAdjustments[materialName] = 1;
 
-function changeItemNeededQty(productId, materialName, change) {
-    selectedProductId = productId;
-    selectedMaterialName = materialName;
-    selectedChange = change;
+            let newAdjustedQty = product.materialAdjustments[materialName] + change;
+            if (newAdjustedQty < 1) newAdjustedQty = 1;
 
-    // Update modal text
-    document.getElementById("materialNameSpan").textContent = materialName;
-
-    // Show modal
-    var myModal = new bootstrap.Modal(document.getElementById("confirmIncreaseModal"));
-    myModal.show();
-}
-
-document.querySelectorAll(".reason-checkbox").forEach(checkbox => {
-    checkbox.addEventListener("change", function () {
-        // Enable the button only if at least one checkbox is checked
-        let isChecked = document.querySelectorAll(".reason-checkbox:checked").length > 0;
-        document.getElementById("confirmIncreaseBtn").disabled = !isChecked;
-    });
-});
-
-document.getElementById("confirmIncreaseBtn").addEventListener("click", function () {
-    if (selectedProductId && selectedMaterialName) {
-        let selectedReasons = [];
-        document.querySelectorAll(".reason-checkbox:checked").forEach(checkbox => {
-            selectedReasons.push(checkbox.value);
-        });
-
-        if (selectedReasons.length > 0) {
-            let product = cart.find(item => item.id === selectedProductId);
-            if (product && product.materials.hasOwnProperty(selectedMaterialName)) {
-                let newQty = product.materials[selectedMaterialName] + selectedChange;
-                if (newQty < 0) newQty = 0;
-
-                // Update cart object
-                product.materials[selectedMaterialName] = newQty;
-
-                // Update the UI
-                let neededQtyElement = document.getElementById(`item-needed-${selectedProductId}-${selectedMaterialName}`);
-                neededQtyElement.innerText = newQty;
-
-                console.log("Quantity increased for:", selectedMaterialName, "Reasons:", selectedReasons);
-            }
+            product.materialAdjustments[materialName] = newAdjustedQty;
+            updateCartUI();
         }
     }
+}
 
-    // Hide modal
-    var myModalEl = document.getElementById("confirmIncreaseModal");
-    var modal = bootstrap.Modal.getInstance(myModalEl);
-    modal.hide();
+function showIncreaseModal(productId, materialName) {
+    // Set the material name in the modal
+    document.getElementById("materialNameSpan").textContent = materialName;
 
-    // Reset checkboxes
-    document.querySelectorAll(".reason-checkbox").forEach(checkbox => checkbox.checked = false);
+    // Clear any previously selected reasons
+    document.querySelectorAll(".reason-checkbox").forEach(checkbox => {
+        checkbox.checked = false;
+    });
+
+    // Disable the "Yes, Increase" button initially
     document.getElementById("confirmIncreaseBtn").disabled = true;
-});
 
+    // Add event listeners to the checkboxes
+    document.querySelectorAll(".reason-checkbox").forEach(checkbox => {
+        checkbox.addEventListener("change", function () {
+            // Enable the "Yes, Increase" button if at least one reason is selected
+            const isAnyReasonSelected = Array.from(document.querySelectorAll(".reason-checkbox")).some(cb => cb.checked);
+            document.getElementById("confirmIncreaseBtn").disabled = !isAnyReasonSelected;
+        });
+    });
 
+    // Handle the "Yes, Increase" button click
+    document.getElementById("confirmIncreaseBtn").onclick = function () {
+        // Increase the material quantity
+        let product = cart.find(item => item.id === productId);
+        if (product) {
+            if (!product.materialAdjustments) product.materialAdjustments = {};
+            if (!product.materialAdjustments[materialName]) product.materialAdjustments[materialName] = 1;
 
+            product.materialAdjustments[materialName] += 1;
+            updateCartUI();
+        }
 
+        // Close the modal
+        bootstrap.Modal.getInstance(document.getElementById("confirmIncreaseModal")).hide();
+    };
+
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById("confirmIncreaseModal"));
+    modal.show();
+}
 
 function changeQty(productId, change) {
     let product = cart.find(item => item.id === productId);
@@ -544,21 +499,26 @@ function changeQty(productId, change) {
             return; // Stop the function if stock is not enough
         }
 
+        // Update product quantity
         product.qty += change;
+
         if (product.qty <= 0) {
+            // Remove product from cart if quantity is 0
             cart = cart.filter(item => item.id !== productId);
         } else {
-            // Adjust all material quantities to match the new product quantity
-            for (let key in product.materials) {
-                product.materials[key] = product.qty;
-            }
+            // Update subtotal
             product.subtotal = product.price * product.qty;
+
+            // Adjust material adjustments to match the product quantity
+            for (let materialName in product.materialAdjustments) {
+                product.materialAdjustments[materialName] = product.qty;
+            }
         }
+
+        // Update the UI
+        updateCartUI();
     }
-    updateCartUI();
 }
-
-
 
 // Buy button event listener
 document.addEventListener("DOMContentLoaded", function () {
@@ -572,8 +532,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const productPrice = parseFloat(this.dataset.price);
             const itemsNeeded = this.dataset.itemsNeeded; // Get items_needed JSON
             let stockAvailable = this.dataset.stock; // Get stock (can be "N/A")
+            const materialQuantities = this.dataset.materialQuantities; // Get material_quantities JSON
 
-            console.log("Parsed Values:", { productId, productName, productPrice, itemsNeeded, stockAvailable });
+            console.log("Parsed Values:", { productId, productName, productPrice, itemsNeeded, stockAvailable, materialQuantities });
 
             if (Number.isNaN(productId) || productId <= 0 || !productName || Number.isNaN(productPrice) || productPrice <= 0) {
                 console.error("Invalid product data", { productId, productName, productPrice, stockAvailable });
@@ -581,7 +542,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            addToCart(productId, productName, productPrice, itemsNeeded, stockAvailable);
+            addToCart(productId, productName, productPrice, itemsNeeded, stockAvailable, materialQuantities);
         });
     });
 });
@@ -871,8 +832,6 @@ $(document).ready(function () {
     printWindow.document.close();
     printWindow.print();
 }
-
-
 
 });
 </script>
