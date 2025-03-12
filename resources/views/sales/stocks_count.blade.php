@@ -99,7 +99,7 @@
 
 <!-- Add Stock Modal -->
 <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg"> <!-- WIDER MODAL -->
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addStockModalLabel">Add New Stock</h5>
@@ -125,20 +125,32 @@
                         <input type="text" class="form-control" id="item_name" name="item_name" required>
                     </div>
 
-                    <!-- Quantity -->
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Quantity</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
+                    <!-- Note -->
+                    <div class="mb-2">
+                        <small class="text-danger">* Please use smaller units for more accurate measurements (e.g., grams instead of kilograms).</small>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="unit_of_measurement" class="form-label">Unit of Measurement</label>
-                        <select class="form-select" id="unit_of_measurement" name="unit_of_measurement" required>
-                            <option value="">Select a Unit</option>
-                            @foreach($unitsOfMeasurement as $key => $unit)
-                                <option value="{{ $key }}">{{ $unit }}</option>
-                            @endforeach
-                        </select>
+                    <div class="mb-2">
+                        <small class="text-danger">
+                            * If the material is in liters (L) or kilograms (kg), please convert it into milliliters (mL) or grams (g) before inputting the quantity.
+                        </small>
+                    </div>
+
+                    <!-- Quantity & Unit of Measurement in One Row -->
+                    <div class="mb-3 row">
+                        <div class="col-md-6">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="unit_of_measurement" class="form-label">Unit of Measurement</label>
+                            <select class="form-select" id="unit_of_measurement" name="unit_of_measurement" required>
+                                <option value="">Select a Unit</option>
+                                @foreach($unitsOfMeasurement as $key => $unit)
+                                    <option value="{{ $key }}">{{ $unit }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Price -->
@@ -155,6 +167,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- Update Stock Modal -->
 <div class="modal fade" id="updateStockModal" tabindex="-1" aria-labelledby="updateStockModalLabel" aria-hidden="true" data-bs-backdrop="static">

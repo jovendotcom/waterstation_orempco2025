@@ -126,13 +126,8 @@ class ProductInventoryController extends Controller
         // Define possible units of measurement
         $unitsOfMeasurement = [
             'grams' => 'Grams',
-            'liters' => 'Liters',
-            'milliliters' => 'Milliliters',
+            'ml' => 'Milliliters',
             'pieces' => 'Pieces',
-            'kilograms' => 'Kilograms',
-            'cups' => 'Cups',
-            'tablespoons' => 'Tablespoons',
-            'teaspoons' => 'Teaspoons',
         ];
         return view('sales.stocks_count', compact('stocks', 'categories', 'unitsOfMeasurement'));
     }
@@ -163,22 +158,23 @@ class ProductInventoryController extends Controller
     
     public function export($format)
     {
-        $stocks = StocksCount::all();
+        $categories = Category::with('stockCounts')->get();
     
-        if ($stocks->isEmpty()) {
+        if ($categories->isEmpty() || $categories->every(fn($category) => $category->stockCounts->isEmpty())) {
             return redirect()->back()->with('fail', 'No stock data found to export.');
         }
     
         if ($format === 'excel') {
             return Excel::download(new StocksCountExport, 'physical_inventory_count_form.xlsx');
         } elseif ($format === 'pdf') {
-            $pdf = \PDF::loadView('exports.stocks_count', compact('stocks'))
-                ->setPaper('legal', 'portrait'); // Use Legal size in portrait mode
+            $pdf = \PDF::loadView('exports.stocks_count', compact('categories'))
+                ->setPaper('legal', 'portrait');
             return $pdf->download('physical_inventory_count_form.pdf');
         } else {
             return redirect()->back()->with('fail', 'Invalid export format selected.');
         }
     }
+    
     
 
     // Update stock count

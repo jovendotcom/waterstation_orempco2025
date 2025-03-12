@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OREMPCO Water Station - Physical Inventory Count</title>
+    <title>OREMPCO - Physical Inventory Count</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,19 +19,15 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
-        }
-        table, th, td {
-            border: 1px solid #000;
+            table-layout: fixed;
         }
         th, td {
+            border: 1px solid #000;
             padding: 8px 12px;
             text-align: left;
         }
         th {
             background-color: #f2f2f2;
-        }
-        thead {
-            display: table-header-group;
         }
         .footer {
             position: fixed;
@@ -40,6 +36,23 @@
             font-size: 10px;
             text-align: right;
         }
+        .inventory-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .total-expense {
+            font-weight: bold;
+            text-align: right;
+            padding: 10px;
+            margin-top: 5px;
+            border-top: 2px solid #000;
+        }
+        .column-item { width: 40%; }
+        .column-quantity { width: 20%; }
+        .column-price { width: 20%; }
+        .column-remarks { width: 20%; }
     </style>
 </head>
 <body>
@@ -61,27 +74,47 @@
     </div>
 
     <!-- Inventory Details -->
-    <p><strong>Product:</strong> WATER | <strong>Date of Inventory:</strong> {{ \Carbon\Carbon::now()->format('m/d/Y') }}</p>
+    <p><strong>Date of Inventory:</strong> {{ \Carbon\Carbon::now()->format('m/d/Y') }}</p>
 
-    <!-- Stocks Table -->
-    <table>
-        <thead>
-            <tr>
-                <th>ITEM</th>
-                <th>QUANTITY</th>
-                <th>REMARKS</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($stocks as $stock)
+    @foreach($categories as $category)
+        <div class="inventory-details">
+            <p><strong>Category:</strong> {{ $category->name }}</p>
+        </div>
+
+        <!-- Stocks Table -->
+        <table>
+            <thead>
                 <tr>
-                    <td>{{ $stock['item_name'] }}</td>
-                    <td style="text-align: right;">{{ $stock['quantity'] }}</td>
-                    <td>{{ $stock['remarks'] }}</td>
+                    <th class="column-item">ITEM</th>
+                    <th class="column-quantity">QUANTITY</th>
+                    <th class="column-price">PRICE</th>
+                    <th class="column-remarks">REMARKS</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @php
+                    $totalExpense = 0;
+                @endphp
+                @foreach($category->stockCounts as $stock)
+                    @php
+                        $totalExpense += $stock->price; // Sum of all item prices
+                    @endphp
+                    <tr>
+                        <td class="column-item">{{ $stock->item_name }}</td>
+                        <td class="column-quantity">
+                            {{ $stock->quantity }} {{ $stock->unit_of_measurement ?? '' }}
+                        </td>
+                        <td class="column-price">{{ number_format($stock->price, 2) }}</td>
+                        <td class="column-remarks">{{ $stock->remarks }}</td>
+                    </tr>
+                @endforeach
+                <tr>
+                    <td colspan="3" class="total-expense">Total Expense for {{ $category->name }}:</td>
+                    <td class="total-expense">{{ number_format($totalExpense, 2) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    @endforeach
 
     <!-- Footer -->
     <div class="footer">
