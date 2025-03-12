@@ -338,11 +338,14 @@ function addToCart(productId, productName, productPrice, itemsNeededJson, stockA
     let currentQtyInCart = product ? product.qty : 0;
     let newQty = currentQtyInCart + 1;
 
+    // If the product has a quantity in the database, check stock
     if (stockAvailable !== "N/A") {
         stockAvailable = parseInt(stockAvailable, 10);
-        if (!isNaN(stockAvailable) && newQty > stockAvailable) {
-            alert(`Insufficient stock for ${productName}. Available stock: ${stockAvailable}`);
-            return;
+        if (!isNaN(stockAvailable)) {
+            if (newQty > stockAvailable) {
+                alert(`Insufficient stock for ${productName}. Available stock: ${stockAvailable}`);
+                return;
+            }
         }
     }
 
@@ -361,7 +364,7 @@ function addToCart(productId, productName, productPrice, itemsNeededJson, stockA
                 acc[key] = 1; // Initialize with the product quantity
                 return acc;
             }, {}), // Adjusted quantities for the cart
-            stock: stockAvailable
+            stock: stockAvailable // Stock from the database
         });
     }
 
@@ -381,6 +384,7 @@ function updateCartUI() {
 
         let materialsListHTML = "";
 
+        // If the product has no stock (N/A) and has materials needed
         if (item.stock === "N/A" && Object.keys(item.materials).length > 0) {
             for (let materialName in item.materials) {
                 let materialQty = item.materials[materialName]; // Quantity from the database
@@ -525,6 +529,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".buy-btn").forEach(button => {
         button.addEventListener("click", function (e) {
             e.preventDefault();
+            console.log("Buy button clicked!"); // Debugging line
             console.log('Button dataset:', this.dataset);
 
             const productId = parseInt(this.dataset.id, 10);

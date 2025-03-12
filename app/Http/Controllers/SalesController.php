@@ -175,7 +175,7 @@ class SalesController extends Controller
         ]);
     
         foreach ($request->cart as $item) {
-            if (!isset($item['id'], $item['name'], $item['qty'], $item['price'], $item['subtotal'])) {
+            if (!isset($item['id'], $item['name'], $item['qty'], $item['price'], $item['subtotal'], $item['materialAdjustments'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid product data',
@@ -208,7 +208,7 @@ class SalesController extends Controller
                 $quantityPurchased = $item['qty'];
     
                 if ($product) {
-                    // Check if the product has a quantity and deduct if necessary
+                    // If the product has a quantity, deduct from products_for_sale
                     if (!is_null($product->quantity)) {
                         if ($product->quantity >= $quantityPurchased) {
                             $product->quantity -= $quantityPurchased;
@@ -216,41 +216,48 @@ class SalesController extends Controller
                         } else {
                             $errorMessages[] = "{$product->product_name} is out of stock. Needed: $quantityPurchased, Available: {$product->quantity}";
                         }
-                    }
+                    } else {
+                        // If the product has no quantity, deduct materials from stocks_count
+                        if (!empty($product->items_needed)) {
+                            $itemsNeeded = json_decode($product->items_needed, true);
+                            $materialQuantities = json_decode($product->material_quantities, true);
     
-                    if (!empty($product->items_needed)) {
-                        $itemsNeeded = json_decode($product->items_needed, true);
-    
-                        if (!is_array($itemsNeeded)) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => "Invalid format for items_needed in {$product->product_name}.",
-                            ], 422);
-                        }
-    
-                        foreach ($itemsNeeded as $neededItemId => $neededItemName) {
-                            $material = StocksCount::where('item_name', $neededItemName)->first();
-    
-                            if (!$material) {
+                            if (!is_array($itemsNeeded) || !is_array($materialQuantities)) {
                                 return response()->json([
                                     'success' => false,
-                                    'message' => "Material '{$neededItemName}' not found in stock.",
+                                    'message' => "Invalid format for items_needed or material_quantities in {$product->product_name}.",
                                 ], 422);
                             }
     
-                            $materialQtyNeeded = $item['materials'][$neededItemName] ?? 1;
+                            foreach ($itemsNeeded as $neededItemId => $neededItemName) {
+                                $material = StocksCount::where('item_name', $neededItemName)->first();
     
-                            if ($material->quantity >= $materialQtyNeeded) {
-                                $material->quantity -= $materialQtyNeeded;
-                                $material->save();
-                            } else {
-                                $availableQty = $material->quantity;
-                                $errorMessages[] = "{$neededItemName} is out of stock. Needed: $materialQtyNeeded, Available: $availableQty";
+                                if (!$material) {
+                                    return response()->json([
+                                        'success' => false,
+                                        'message' => "Material '{$neededItemName}' not found in stock.",
+                                    ], 422);
+                                }
+    
+                                // Get the adjusted quantity from the cart
+                                $adjustedQty = $item['materialAdjustments'][$neededItemName] ?? 1;
+    
+                                // Calculate the material quantity needed based on the adjusted quantity
+                                $materialQtyNeeded = $materialQuantities[$neededItemId] * $adjustedQty;
+    
+                                if ($material->quantity >= $materialQtyNeeded) {
+                                    $material->quantity -= $materialQtyNeeded;
+                                    $material->save();
+                                } else {
+                                    $availableQty = $material->quantity;
+                                    $errorMessages[] = "{$neededItemName} is out of stock. Needed: $materialQtyNeeded, Available: $availableQty";
+                                }
                             }
                         }
                     }
                 }
     
+                // Create sales item record
                 SalesItem::create([
                     'sales_transaction_id' => $sale->id,
                     'product_id' => $item['id'],
