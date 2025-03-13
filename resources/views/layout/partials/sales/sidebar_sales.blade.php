@@ -70,7 +70,7 @@
                 </nav>
             </div>
 
-            <a class="nav-link text-white">
+            <a class="nav-link text-white {{ request()->routeIs('sales.userProfile') ? 'active' : '' }}" href="{{ route('sales.userProfile') }}">
                 <div class="sb-nav-link-icon text-white"><i class="fa-regular fa-user"></i></div>
                 User Profile
             </a>

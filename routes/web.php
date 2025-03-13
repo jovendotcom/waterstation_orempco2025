@@ -56,6 +56,9 @@ Route::prefix('admin')->group(function () {
         Route::post('/subcategories/store', [AdminController::class, 'storeSubCategories'])->name('admin.subcategory.store');
         Route::put('/subcategories/update', [AdminController::class, 'updateSubCategories'])->name('admin.subcategory.update');
         Route::delete('/subcategories/destroy/{id}', [AdminController::class, 'destroySubCategories'])->name('admin.subcategory.destroy');
+
+        Route::GET('/admin_userprofile', [AdminController::class, 'userProfile'])->name('admin.userProfile');
+        Route::post('/user/profile/update-password', [AdminController::class, 'changePassword'])->name('admin.changePassword');
     });
 });
 
@@ -103,6 +106,9 @@ Route::prefix('sales')->group(function () {
 
         Route::post('/products/store', [ProductInventoryController::class, 'store'])->name('products.storeProduct');
         Route::post('/products/addStock', [ProductInventoryController::class, 'addStock'])->name('products.addStock');
+
+        Route::GET('/sales_userprofile', [SalesController::class, 'userProfile'])->name('sales.userProfile');
+        Route::post('/user/profile/update-password', [SalesController::class, 'changePassword'])->name('sales.changePassword');
         
     });
 });

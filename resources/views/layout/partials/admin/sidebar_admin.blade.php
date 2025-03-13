@@ -36,6 +36,11 @@
                 Product Inventory
             </a>
 
+            <a class="nav-link text-white {{ request()->routeIs('admin.userProfile') ? 'active' : '' }}" href="{{ route('admin.userProfile') }}">
+                <div class="sb-nav-link-icon text-white"><i class="fa-regular fa-user"></i></div>
+                User Profile
+            </a>
+
             <!-- Add more admin links with respective icons here -->
         </div>
     </div>
