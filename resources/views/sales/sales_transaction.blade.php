@@ -366,9 +366,16 @@ function addToCart(productId, productName, productPrice, itemsNeededJson, stockA
     }
 
     if (product) {
+        // If the product is already in the cart, increment the quantity and adjust materials
         product.qty = newQty;
         product.subtotal = product.price * product.qty;
+
+        // Adjust material quantities based on the new quantity
+        for (let materialName in product.materials) {
+            product.materialAdjustments[materialName] = newQty;
+        }
     } else {
+        // If the product is not in the cart, add it with initial quantity and material adjustments
         cart.push({
             id: productId,
             name: productName,
@@ -541,31 +548,31 @@ function changeQty(productId, change) {
 
     // Buy button event listener
     document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".buy-btn").forEach(button => {
-            button.addEventListener("click", function (e) {
-                e.preventDefault();
-                console.log('Button dataset:', this.dataset);
+    document.querySelectorAll(".buy-btn").forEach(button => {
+        button.addEventListener("click", function (e) {
+            e.preventDefault();
+            console.log('Button dataset:', this.dataset);
 
-                const productId = parseInt(this.dataset.id, 10);
-                const productName = this.dataset.name;
-                const productPrice = parseFloat(this.dataset.price);
-                const itemsNeeded = this.dataset.itemsNeeded; // Get items_needed JSON
-                let stockAvailable = this.dataset.stock; // Get stock (can be "N/A")
-                const materialQuantities = this.dataset.materialQuantities; // Get material_quantities JSON
-                const materialQuantityUnits = this.dataset.materialQuantityUnitOfMeasurement; // Get material_quantity_unit_of_measurement JSON
+            const productId = parseInt(this.dataset.id, 10);
+            const productName = this.dataset.name;
+            const productPrice = parseFloat(this.dataset.price);
+            const itemsNeeded = this.dataset.itemsNeeded; // Get items_needed JSON
+            let stockAvailable = this.dataset.stock; // Get stock (can be "N/A")
+            const materialQuantities = this.dataset.materialQuantities; // Get material_quantities JSON
+            const materialQuantityUnits = this.dataset.materialQuantityUnitOfMeasurement; // Get material_quantity_unit_of_measurement JSON
 
-                console.log("Parsed Values:", { productId, productName, productPrice, itemsNeeded, stockAvailable, materialQuantities, materialQuantityUnits });
+            console.log("Parsed Values:", { productId, productName, productPrice, itemsNeeded, stockAvailable, materialQuantities, materialQuantityUnits });
 
-                if (Number.isNaN(productId) || productId <= 0 || !productName || Number.isNaN(productPrice) || productPrice <= 0) {
-                    console.error("Invalid product data", { productId, productName, productPrice, stockAvailable });
-                    alert("Invalid product data! Check the console (F12).");
-                    return;
-                }
+            if (Number.isNaN(productId) || productId <= 0 || !productName || Number.isNaN(productPrice) || productPrice <= 0) {
+                console.error("Invalid product data", { productId, productName, productPrice, stockAvailable });
+                alert("Invalid product data! Check the console (F12).");
+                return;
+            }
 
-                addToCart(productId, productName, productPrice, itemsNeeded, stockAvailable, materialQuantities, materialQuantityUnits);
-            });
+            addToCart(productId, productName, productPrice, itemsNeeded, stockAvailable, materialQuantities, materialQuantityUnits);
         });
     });
+});
 
 // Function to refresh the PO number after a successful transaction
 function refreshPoNumber() {
@@ -772,7 +779,8 @@ $(document).ready(function () {
             </p>
             <hr>
             <p><strong>Sales Order Number:</strong> ${poNumber}</p>
-            <p><strong>Waterstation Staff:</strong> ${cashierName}</p>
+            <p><strong>Staff:</strong> ${cashierName}</p>
+            <p><strong>Customer:</strong> ${$('#customer option:selected').text()}</p>
             <p><strong>Date/Time:</strong> ${dateTime}</p>
             <hr>
             <table style="width: 100%;">

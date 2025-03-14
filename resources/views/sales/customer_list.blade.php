@@ -95,7 +95,8 @@
                                 data-customer-name="{{ $customer->full_name }}"
                                 data-customer-type="{{ $customer->type }}"
                                 data-customer-department="{{ $customer->department }}"
-                                data-customer-employee-id="{{ $customer->employee_id }}">
+                                data-customer-employee-id="{{ $customer->employee_id }}"
+                                data-customer-membership-status="{{ $customer->membership_status }}">
                                 Edit
                             </button>
                             <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteCustomerModal" 
@@ -139,7 +140,20 @@
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="type" id="editTypeOutside" value="Outside" disabled>
-                            <label class="form-check-label" for="editTypeDepartment">Outside Customer</label>
+                            <label class="form-check-label" for="editTypeOutside">Outside Customer</label>
+                        </div>
+                    </div>
+
+                    <!-- Membership Status Toggle (for Employee) -->
+                    <div id="editMembershipStatus" class="mb-3 d-none">
+                        <label class="form-label">Membership Status</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="membership_status" id="editMember" value="Member">
+                            <label class="form-check-label" for="editMember">Member</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="membership_status" id="editNonMember" value="Non-Member">
+                            <label class="form-check-label" for="editNonMember">Non-Member</label>
                         </div>
                     </div>
 
@@ -147,7 +161,7 @@
                     <div id="editDepartmentField" class="d-none">
                         <div class="mb-3">
                             <label for="editDepartmentInput" class="form-label">Department Name</label>
-                            <input type="text" class="form-control" id="editDepartmentInput" name="department" placeholder="Enter department name" disabled>
+                            <input type="text" class="form-control" id="editDepartmentInput" name="department" placeholder="Enter department name">
                         </div>
                     </div>
 
@@ -173,6 +187,24 @@
                                     <option value="{{ $department }}">{{ $department }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- Outside Customer Fields -->
+                    <div id="editOutsideFields" class="d-none">
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label for="editOutsideLastName" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="editOutsideLastName" name="outside_last_name" placeholder="Last Name">
+                            </div>
+                            <div class="col">
+                                <label for="editOutsideFirstName" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="editOutsideFirstName" name="outside_first_name" placeholder="First Name">
+                            </div>
+                            <div class="col">
+                                <label for="editOutsideMiddleInitial" class="form-label">Middle Initial</label>
+                                <input type="text" maxlength="1" class="form-control" id="editOutsideMiddleInitial" name="outside_middle_initial" placeholder="M.I.">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -446,57 +478,75 @@ window.onload = function () {
 
 
 
-        // Edit Customer Modal
-        document.addEventListener('DOMContentLoaded', function () {
-            const editCustomerModal = document.getElementById('editCustomerModal');
+    // Edit Customer Modal
+    document.addEventListener('DOMContentLoaded', function () {
+    const editCustomerModal = document.getElementById('editCustomerModal');
 
-            editCustomerModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
+    editCustomerModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
 
-                const customerId = button.getAttribute('data-customer-id');
-                const customerType = button.getAttribute('data-customer-type');
-                const employeeId = button.getAttribute('data-customer-employee-id');
-                const fullName = button.getAttribute('data-customer-name');
-                const department = button.getAttribute('data-customer-department');
+        const customerId = button.getAttribute('data-customer-id');
+        const customerType = button.getAttribute('data-customer-type');
+        const employeeId = button.getAttribute('data-customer-employee-id');
+        const fullName = button.getAttribute('data-customer-name');
+        const department = button.getAttribute('data-customer-department');
+        const membershipStatus = button.getAttribute('data-customer-membership-status');
 
-                // Update form action
-                const form = document.getElementById('editCustomerForm');
-                form.action = '{{ route('customers.update', ['id' => '__id__']) }}'.replace('__id__', customerId);
+        // Update form action
+        const form = document.getElementById('editCustomerForm');
+        form.action = '{{ route('customers.update', ['id' => '_id_']) }}'.replace('_id_', customerId);
 
-                // Populate fields
-                document.getElementById('editFullName').value = fullName || '';
-                document.getElementById('editDepartmentInput').value = department || '';
-                document.getElementById('editEmployeeId').value = employeeId || '';
+        // Hide all fields initially
+        document.getElementById('editDepartmentField').classList.add('d-none');
+        document.getElementById('editEmployeeFields').classList.add('d-none');
+        document.getElementById('editOutsideFields').classList.add('d-none');
+        document.getElementById('editMembershipStatus').classList.add('d-none');
 
-                // Enable/disable fields based on type
-                if (customerType === 'Employee') {
-                    document.getElementById('editTypeEmployee').checked = true;
-                    document.getElementById('editEmployeeFields').classList.remove('d-none');
-                    document.getElementById('editDepartmentField').classList.add('d-none');
+        // Handle Employee (regardless of membership status)
+        if (customerType === 'Employee') {
+            document.getElementById('editTypeEmployee').checked = true;
+            document.getElementById('editEmployeeFields').classList.remove('d-none');
+            document.getElementById('editMembershipStatus').classList.remove('d-none');
 
-                    // Make only department dropdown editable for employees
-                    document.getElementById('editFullName').readOnly = true;
-                    document.getElementById('editEmployeeId').readOnly = true;
-                    document.getElementById('editDepartmentInput').readOnly = false;
-                } else if (customerType === 'Department') {
-                    document.getElementById('editTypeDepartment').checked = true;
-                    document.getElementById('editDepartmentField').classList.remove('d-none');
-                    document.getElementById('editEmployeeFields').classList.add('d-none');
+            // Populate fields
+            document.getElementById('editFullName').value = fullName || '';
+            document.getElementById('editEmployeeId').value = employeeId || '';
+            document.getElementById('editEmployeeDepartment').value = department || '';
 
-                    // Make only the name editable for departments
-                    document.getElementById('editFullName').readOnly = false;
-                    document.getElementById('editDepartmentInput').readOnly = false;
-                }
+            // Set membership status
+            if (membershipStatus === 'Member') {
+                document.getElementById('editMember').checked = true;
+            } else if (membershipStatus === 'Non-Member') {
+                document.getElementById('editNonMember').checked = true;
+            }
+        }
+        // Handle Department
+        else if (customerType === 'Department') {
+            document.getElementById('editTypeDepartment').checked = true;
+            document.getElementById('editDepartmentField').classList.remove('d-none');
 
-                // Set the selected option in the department dropdown
-                const departmentDropdown = document.getElementById('editEmployeeDepartment');
-                Array.from(departmentDropdown.options).forEach(option => {
-                    if (option.value === department) {
-                        option.selected = true;
-                    }
-                });
-            });
-        });
+            // Populate fields
+            document.getElementById('editDepartmentInput').value = fullName || '';
+        }
+        // Handle Outside Customer (Non-Member)
+        else if (customerType === 'Outside' || membershipStatus === 'Non-Member') {
+            document.getElementById('editTypeOutside').checked = true;
+            document.getElementById('editOutsideFields').classList.remove('d-none');
+
+            // Split full name into last name, first name, and middle initial
+            const nameParts = fullName.split(', ');
+            const lastName = nameParts[0];
+            const firstNameMiddle = nameParts[1] ? nameParts[1].split(' ') : [];
+            const firstName = firstNameMiddle[0] || '';
+            const middleInitial = firstNameMiddle[1] ? firstNameMiddle[1].replace('.', '') : '';
+
+            // Populate fields
+            document.getElementById('editOutsideLastName').value = lastName;
+            document.getElementById('editOutsideFirstName').value = firstName;
+            document.getElementById('editOutsideMiddleInitial').value = middleInitial;
+        }
+    });
+});
 
 
 

@@ -155,18 +155,19 @@ class CustomerListController extends Controller
         return redirect()->back()->with('error', 'Invalid export format.');
     }
 
-
-         
     public function update(Request $request, $id)
     {
         $customer = Customer::findOrFail($id);
-    
+
         if ($customer->type === 'Employee') {
             $validatedData = $request->validate([
                 'department' => 'required|string|max:255',
+                'membership_status' => 'required|in:Member,Non-Member', // Validate membership status
             ]);
+
             $customer->update([
                 'department' => $validatedData['department'],
+                'membership_status' => $validatedData['membership_status'], // Update membership status
             ]);
         } elseif ($customer->type === 'Department') {
             $validatedData = $request->validate([
@@ -175,8 +176,24 @@ class CustomerListController extends Controller
             $customer->update([
                 'full_name' => $validatedData['full_name'],
             ]);
+        } elseif ($customer->type === 'Outside' || $customer->membership_status === 'Non-Member') {
+            $validatedData = $request->validate([
+                'outside_last_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'],
+                'outside_first_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'],
+                'outside_middle_initial' => ['nullable', 'string', 'max:1', 'regex:/^[a-zA-Z]$/'],
+            ]);
+
+            // Combine full name
+            $fullName = strtoupper($validatedData['outside_last_name']) . ', ' . strtoupper($validatedData['outside_first_name']);
+            if (!empty($validatedData['outside_middle_initial'])) {
+                $fullName .= ' ' . strtoupper($validatedData['outside_middle_initial']) . '.';
+            }
+
+            $customer->update([
+                'full_name' => $fullName,
+            ]);
         }
-    
+
         return redirect()->route('sales.customerlist')->with('success', 'Customer updated successfully!');
     }
     

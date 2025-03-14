@@ -287,7 +287,7 @@ class SalesController extends Controller
                 'message' => 'Transaction completed successfully!',
             ]);
     
-        } catch (\Exception $e) {
+        } catch (\Exception $e) { 
             DB::rollBack();
             \Log::error('Sales transaction failed:', ['error' => $e->getMessage()]);
             return response()->json([
