@@ -60,67 +60,81 @@
 @endif
 
 <div class="row" style="height: calc(90vh - 120px);">
-    <!-- Left Container (70%) -->
-    <div class="col-lg-7 d-flex">
-        <div class="card mb-4 flex-fill">
-            <!-- Fixed Header -->
-            <div class="card-header" style="position: sticky; top: 0; z-index: 1; background: white;">
-                <i class="fas fa-table me-1"></i>
-                Product List
-            </div>
-            <!-- Scrollable Body -->
-            <div class="card-body" style="overflow-y: auto; height: calc(90vh - 160px);">
-                <!-- Product Grid -->
-                <div class="row row-cols-1 row-cols-md-3 g-4">
-                    @foreach($products as $product)
-                    <div class="col">
-                        <div class="card h-100 position-relative" data-id="{{ $product->id }}" style="overflow: hidden; box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2); border-radius: 10px;">
-                            <!-- Out of Stock Overlay -->
-                            @if($product->quantity === 0)
-                            <div id="out-of-stock-{{ $product->id }}" class="out-of-stock-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                                        background: rgba(255, 255, 255, 0.7); /* Transparent White */
-                                        color: red; font-size: 30px; font-weight: 900; 
-                                        display: flex; align-items: center; justify-content: center;
-                                        text-transform: uppercase; letter-spacing: 2px;
-                                        text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);">
-                                OUT OF STOCK
-                            </div>
-                            @endif
+<!-- Left Container (70%) -->
+<div class="col-lg-7 d-flex">
+    <div class="card mb-4 flex-fill">
+        <!-- Fixed Header -->
+        <div class="card-header" style="position: sticky; top: 0; z-index: 1; background: white;">
+            <i class="fas fa-table me-1"></i>
+            Product List
+        </div>
+        <!-- Scrollable Body -->
+        <div class="card-body" style="overflow-y: auto; height: calc(90vh - 160px);">
+            <!-- Iterate over grouped products by subcategory -->
+            @foreach($groupedProducts as $subcategoryId => $products)
+                @php
+                    $subcategory = App\Models\Subcategory::find($subcategoryId);
+                @endphp
 
-                            <!-- Display Product Image -->
-                            <img src="{{ $product->product_image ? asset('storage/' . $product->product_image) : asset('images/placeholder.png') }}" 
-                                class="card-img-top" 
-                                alt="{{ $product->product_name }}" 
-                                style="max-height: 150px; width: auto; margin: 0 auto; display: block; border-radius: 10px 10px 0 0;">
+                <!-- Subcategory Box -->
+                <div class="subcategory-box mb-4 p-3" style="border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+                    <h5 class="subcategory-name" style="font-weight: bold; color: #333; margin-bottom: 15px;">
+                        {{ $subcategory->sub_name }}
+                    </h5>
 
-                            <div class="card-body">
-                                <h6 class="card-title">{{ $product->product_name }} {{ $product->size_options }}</h6>
-                                <p class="card-text" style="font-weight: bold; color: {{ $product->quantity === 0 ? 'red' : 'green' }};">
-                                    Stock Available: <span>{{ $product->quantity ?? 'N/A' }}</span>
-                                </p>
-                                <p class="card-text" style="font-weight: bold; color: green;">Price: &#8369;{{ number_format($product->price, 2) }}</p>
-                                <form action="#" method="POST">
-                                    @csrf
-                                    <button type="button" class="buy-btn btn btn-success w-100" 
-                                        data-id="{{ $product->id }}" 
-                                        data-name="{{ $product->product_name }}" 
-                                        data-price="{{ $product->price }}"
-                                        data-stock="{{ $product->quantity ?? 'N/A' }}" 
-                                        data-items-needed="{{ $product->items_needed }}"
-                                        data-material-quantities="{{ $product->material_quantities }}"
-                                        data-material-quantity-unit-of-measurement="{{ $product->material_quantity_unit_of_measurement }}"
-                                        {{ $product->quantity === 0 ? 'disabled' : '' }}>
-                                        Buy
-                                    </button>
-                                </form>
+                    <!-- Product Grid -->
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        @foreach($products as $product)
+                            <div class="col">
+                                <div class="card h-100 position-relative" data-id="{{ $product->id }}" style="overflow: hidden; box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2); border-radius: 10px;">
+                                    <!-- Out of Stock Overlay -->
+                                    @if($product->quantity === 0)
+                                        <div id="out-of-stock-{{ $product->id }}" class="out-of-stock-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                                            background: rgba(255, 255, 255, 0.7); /* Transparent White */
+                                            color: red; font-size: 30px; font-weight: 900; 
+                                            display: flex; align-items: center; justify-content: center;
+                                            text-transform: uppercase; letter-spacing: 2px;
+                                            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);">
+                                            OUT OF STOCK
+                                        </div>
+                                    @endif
+
+                                    <!-- Display Product Image -->
+                                    <img src="{{ $product->product_image ? asset('storage/' . $product->product_image) : asset('images/placeholder.png') }}" 
+                                        class="card-img-top" 
+                                        alt="{{ $product->product_name }}" 
+                                        style="max-height: 150px; width: auto; margin: 0 auto; display: block; border-radius: 10px 10px 0 0;">
+
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ $product->product_name }} {{ $product->size_options }}</h6>
+                                        <p class="card-text" style="font-weight: bold; color: {{ $product->quantity === 0 ? 'red' : 'green' }};">
+                                            Stock Available: <span>{{ $product->quantity ?? 'N/A' }}</span>
+                                        </p>
+                                        <p class="card-text" style="font-weight: bold; color: green;">Price: &#8369;{{ number_format($product->price, 2) }}</p>
+                                        <form action="#" method="POST">
+                                            @csrf
+                                            <button type="button" class="buy-btn btn btn-success w-100" 
+                                                data-id="{{ $product->id }}" 
+                                                data-name="{{ $product->product_name }}" 
+                                                data-price="{{ $product->price }}"
+                                                data-stock="{{ $product->quantity ?? 'N/A' }}" 
+                                                data-items-needed="{{ $product->items_needed }}"
+                                                data-material-quantities="{{ $product->material_quantities }}"
+                                                data-material-quantity-unit-of-measurement="{{ $product->material_quantity_unit_of_measurement }}"
+                                                {{ $product->quantity === 0 ? 'disabled' : '' }}>
+                                                Buy
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        @endforeach
                     </div>
-                    @endforeach
                 </div>
-            </div>
+            @endforeach
         </div>
     </div>
+</div>
 
     <!-- Right Container (30%) -->
     <div class="col-lg-5 d-flex">

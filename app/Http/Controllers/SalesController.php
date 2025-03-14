@@ -20,6 +20,7 @@ use App\Exports\SalesReportExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
+use App\Models\Subcategory;
 
 class SalesController extends Controller
 {
@@ -120,7 +121,10 @@ class SalesController extends Controller
 
     public function salesTransaction(Request $request)
     {
-        $products = ProductForSale::all(); 
+        $products = ProductForSale::with('subcategory')->get(); 
+
+        // Group products by subcategory
+        $groupedProducts = $products->groupBy('subcategory_id');
     
         $customers = Customer::orderByRaw("FIELD(type, 'department', 'employee')")
                              ->orderBy('full_name', 'asc')
@@ -139,7 +143,7 @@ class SalesController extends Controller
         // Format as 4-digit number (e.g., SO-0001, SO-0002, ...)
         $poNumber = 'SO-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     
-        return view('sales.sales_transaction', compact('products', 'customers', 'poNumber'));
+        return view('sales.sales_transaction', compact('products', 'customers', 'poNumber', 'groupedProducts'));
     }       
     
 
