@@ -236,6 +236,7 @@
                                                 <div class="input-group quantity-input" style="width: 180px; display: none;">
                                                     <input type="number" class="form-control" name="material_quantities[{{ $stock->id }}]" placeholder="Quantity" min="1">
                                                     <span class="input-group-text">{{ $stock->unit_of_measurement }}</span>
+                                                    <input type="hidden" name="material_quantity_unit_of_measurement[{{ $stock->id }}]" value="{{ $stock->unit_of_measurement }}">
                                                 </div>
                                             </div>
                                         @endforeach

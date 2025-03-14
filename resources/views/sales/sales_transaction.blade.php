@@ -108,6 +108,7 @@
                                         data-stock="{{ $product->quantity ?? 'N/A' }}" 
                                         data-items-needed="{{ $product->items_needed }}"
                                         data-material-quantities="{{ $product->material_quantities }}"
+                                        data-material-quantity-unit-of-measurement="{{ $product->material_quantity_unit_of_measurement }}"
                                         {{ $product->quantity === 0 ? 'disabled' : '' }}>
                                         Buy
                                     </button>
@@ -313,8 +314,8 @@ $(document).ready(function () {
 // Cart handling
 let cart = []; // Array of objects { id, name, price, qty, subtotal, stock }
 
-function addToCart(productId, productName, productPrice, itemsNeededJson, stockAvailable, materialQuantitiesJson) {
-    console.log("Adding to cart:", { productId, productName, productPrice, itemsNeededJson, stockAvailable, materialQuantitiesJson });
+function addToCart(productId, productName, productPrice, itemsNeededJson, stockAvailable, materialQuantitiesJson, materialQuantityUnitsJson) {
+    console.log("Adding to cart:", { productId, productName, productPrice, itemsNeededJson, stockAvailable, materialQuantitiesJson, materialQuantityUnitsJson });
 
     if (!productId || !productName || isNaN(productPrice) || productPrice <= 0) {
         console.error("Invalid product data", { productId, productName, productPrice });
@@ -322,15 +323,19 @@ function addToCart(productId, productName, productPrice, itemsNeededJson, stockA
         return;
     }
 
-    // Parse items_needed and material_quantities JSON
+    // Parse JSON data
     let itemsNeeded = itemsNeededJson ? JSON.parse(itemsNeededJson) : {};
     let materialQuantities = materialQuantitiesJson ? JSON.parse(materialQuantitiesJson) : {};
+    let materialQuantityUnits = materialQuantityUnitsJson ? JSON.parse(materialQuantityUnitsJson) : {};
 
-    // Initialize materials with quantities from the database
+    // Initialize materials with quantities and units from the database
     let materials = {};
     for (let key in itemsNeeded) {
         let materialName = itemsNeeded[key];
-        materials[materialName] = materialQuantities[key] || 1; // Use materialQuantities from the database
+        materials[materialName] = {
+            quantity: materialQuantities[key] || 1, // Quantity from the database
+            unit: materialQuantityUnits[key] || 'unit' // Unit of measurement from the database
+        };
     }
 
     // Check if product already exists in cart
@@ -356,7 +361,7 @@ function addToCart(productId, productName, productPrice, itemsNeededJson, stockA
             price: productPrice,
             qty: 1,
             subtotal: productPrice,
-            materials: materials, // Material quantities from the database
+            materials: materials, // Material quantities and units from the database
             materialAdjustments: Object.keys(materials).reduce((acc, key) => {
                 acc[key] = 1; // Initialize with the product quantity
                 return acc;
@@ -383,7 +388,8 @@ function updateCartUI() {
 
         if (item.stock === "N/A" && Object.keys(item.materials).length > 0) {
             for (let materialName in item.materials) {
-                let materialQty = item.materials[materialName]; // Quantity from the database
+                let materialQty = item.materials[materialName].quantity; // Quantity from the database
+                let materialUnit = item.materials[materialName].unit; // Unit of measurement from the database
                 let adjustedQty = item.materialAdjustments[materialName] || item.qty; // Adjusted quantity (default to product quantity)
 
                 // Calculate the total material quantity based on product quantity
@@ -391,9 +397,8 @@ function updateCartUI() {
 
                 materialsListHTML += `
                     <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <span>${materialName}-${totalMaterialQty}: </span> <!-- Material Name and Total Quantity -->
+                        <span>${materialName} - ${totalMaterialQty} ${materialUnit}: </span> <!-- Material Name, Total Quantity, and Unit -->
                         <div style="display: flex; align-items: center; gap: 5px;">
-                            
                             <span id="item-adjusted-${item.id}-${materialName}" style="min-width: 30px; text-align: center;">${adjustedQty}</span>
                             <button class="btn btn-sm btn-success" onclick="changeMaterialAdjustment(${item.id}, '${materialName}', 1)">+</button>
                         </div>
@@ -520,32 +525,33 @@ function changeQty(productId, change) {
     }
 }
 
-// Buy button event listener
-document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".buy-btn").forEach(button => {
-        button.addEventListener("click", function (e) {
-            e.preventDefault();
-            console.log('Button dataset:', this.dataset);
+    // Buy button event listener
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".buy-btn").forEach(button => {
+            button.addEventListener("click", function (e) {
+                e.preventDefault();
+                console.log('Button dataset:', this.dataset);
 
-            const productId = parseInt(this.dataset.id, 10);
-            const productName = this.dataset.name;
-            const productPrice = parseFloat(this.dataset.price);
-            const itemsNeeded = this.dataset.itemsNeeded; // Get items_needed JSON
-            let stockAvailable = this.dataset.stock; // Get stock (can be "N/A")
-            const materialQuantities = this.dataset.materialQuantities; // Get material_quantities JSON
+                const productId = parseInt(this.dataset.id, 10);
+                const productName = this.dataset.name;
+                const productPrice = parseFloat(this.dataset.price);
+                const itemsNeeded = this.dataset.itemsNeeded; // Get items_needed JSON
+                let stockAvailable = this.dataset.stock; // Get stock (can be "N/A")
+                const materialQuantities = this.dataset.materialQuantities; // Get material_quantities JSON
+                const materialQuantityUnits = this.dataset.materialQuantityUnitOfMeasurement; // Get material_quantity_unit_of_measurement JSON
 
-            console.log("Parsed Values:", { productId, productName, productPrice, itemsNeeded, stockAvailable, materialQuantities });
+                console.log("Parsed Values:", { productId, productName, productPrice, itemsNeeded, stockAvailable, materialQuantities, materialQuantityUnits });
 
-            if (Number.isNaN(productId) || productId <= 0 || !productName || Number.isNaN(productPrice) || productPrice <= 0) {
-                console.error("Invalid product data", { productId, productName, productPrice, stockAvailable });
-                alert("Invalid product data! Check the console (F12).");
-                return;
-            }
+                if (Number.isNaN(productId) || productId <= 0 || !productName || Number.isNaN(productPrice) || productPrice <= 0) {
+                    console.error("Invalid product data", { productId, productName, productPrice, stockAvailable });
+                    alert("Invalid product data! Check the console (F12).");
+                    return;
+                }
 
-            addToCart(productId, productName, productPrice, itemsNeeded, stockAvailable, materialQuantities);
+                addToCart(productId, productName, productPrice, itemsNeeded, stockAvailable, materialQuantities, materialQuantityUnits);
+            });
         });
     });
-});
 
 // Function to refresh the PO number after a successful transaction
 function refreshPoNumber() {
