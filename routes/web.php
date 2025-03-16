@@ -109,16 +109,14 @@ Route::prefix('sales')->group(function () {
         Route::get('/get-departments', [CustomerListController::class, 'getDepartments']);//this is to show the departments in the dropdown
         Route::get('/customers/export/{format}', [CustomerListController::class, 'export'])->name('customers.export');
 
-
-        Route::GET('/productInventory', [ProductInventoryController::class, 'productInventory'])->name('sales.productInventory');
         Route::GET('/stockscount', [ProductInventoryController::class, 'countStocks'])->name('sales.stocksCount');
         Route::post('/stocks/store', [ProductInventoryController::class, 'storeStockCount'])->name('stocks.store');
         Route::patch('/stocks/update', [ProductInventoryController::class, 'updateStockCount'])->name('stocks.update');
 
         Route::get('/stocks/export/{format}', [ProductInventoryController::class, 'export'])->name('stocks.export');
 
+        Route::GET('/productInventory', [ProductInventoryController::class, 'productInventory'])->name('sales.productInventory');
         Route::post('/products/store', [ProductInventoryController::class, 'store'])->name('products.storeProduct');
-        Route::post('/products/addStock', [ProductInventoryController::class, 'addStock'])->name('products.addStock');
 
         Route::GET('/sales_userprofile', [SalesController::class, 'userProfile'])->name('sales.userProfile');
         Route::post('/user/profile/update-password', [SalesController::class, 'changePassword'])->name('sales.changePassword');

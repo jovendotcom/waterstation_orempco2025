@@ -26,9 +26,13 @@ class ProductInventoryController extends Controller
     {
         $products = ProductForSale::all();
         $stocks = StocksCount::all(); // Fetch available stock items
+        $subcategories = Subcategory::all(); // Fetch all subcategories
+        $sizeOptions = ['Small', 'Medium', 'Large', 'Solo', 'Jumbo']; // Example size options
+        $unitsOfMeasurement = ['kg', 'g', 'L', 'mL', 'pcs']; // Example units of measurement
+        $categories = Category::with('stockCounts')->get();
     
-        return view('sales.product_inventory', compact('products', 'stocks'));
-    }    
+        return view('sales.product_inventory', compact('products', 'stocks', 'subcategories', 'sizeOptions', 'unitsOfMeasurement', 'categories'));
+    }
 
     public function store(Request $request)
     {
@@ -39,6 +43,11 @@ class ProductInventoryController extends Controller
             'quantity' => 'nullable|integer|min:0',
             'product_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'items_needed' => 'nullable|array',
+            'material_quantities' => 'nullable|array',
+            'material_quantity_unit_of_measurement' => 'nullable|array', // Add this line
+            'subcategory_id' => 'required|exists:subcategories,id',
+            'size_options' => 'nullable|string',
+            'unit_of_measurement' => 'nullable|string',
         ]);
     
         // Check if the product with the same name and price already exists
@@ -58,6 +67,8 @@ class ProductInventoryController extends Controller
     
         // Decode selected items
         $itemsNeeded = $request->items_needed ?? [];
+        $materialQuantities = $request->material_quantities ?? [];
+        $materialQuantityUnits = $request->material_quantity_unit_of_measurement ?? [];
     
         // Check stock availability
         $productQuantity = $request->quantity ?? null;
@@ -80,6 +91,11 @@ class ProductInventoryController extends Controller
             'quantity' => $productQuantity,
             'product_image' => $imagePath,
             'items_needed' => json_encode($itemsNeeded),
+            'material_quantities' => json_encode($materialQuantities),
+            'material_quantity_unit_of_measurement' => json_encode($materialQuantityUnits), // Add this line
+            'subcategory_id' => $request->subcategory_id,
+            'size_options' => $request->size_options,
+            'unit_of_measurement' => $request->unit_of_measurement,
         ]);
     
         // Deduct stock quantities if product has a set quantity
@@ -95,29 +111,8 @@ class ProductInventoryController extends Controller
     
         return redirect()->back()->with('success', 'Product added successfully.');
     }
-
-    public function addStock(Request $request)
-    {
-        $request->validate([
-            'product_id' => 'required|exists:products_for_sale,id',
-            'add_quantity' => 'required|integer|min:1',
-        ]);
-
-        $product = ProductForSale::find($request->product_id);
-
-        if ($product->quantity === null) {
-            return redirect()->back()->with('fail', 'Stock cannot be added for this product.');
-        }
-
-        $product->quantity += $request->add_quantity;
-        $product->save();
-
-        return redirect()->back()->with('success', 'Stock updated successfully.');
-    }
     
-    
-    
-    
+   
     public function countStocks(Request $request)
     {
         $stocks = StocksCount::orderBy('item_name', 'asc')->get(); // Fetch all stock counts

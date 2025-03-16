@@ -56,7 +56,6 @@
                         <th>Item(s) Needed</th>
                         <th>Quantity</th>
                         <th>Price</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -69,15 +68,18 @@
                                     <span>No Image</span>
                                 @endif
                             </td>
-                            <td>{{ $product->product_name }}</td>
+                            <td>{{ $product->product_name }} {{ $product->size_options }}</td>
                             <td>
                                 @php
                                     $items = is_array($product->items_needed) ? $product->items_needed : json_decode($product->items_needed, true);
+                                    $materialQuantities = is_array($product->material_quantities) ? $product->material_quantities : json_decode($product->material_quantities, true);
                                 @endphp
                                 @if(!empty($items))
                                     <ul class="list-unstyled mb-0">
-                                        @foreach($items as $item)
-                                            <li>{{ $item }}</li>
+                                        @foreach($items as $stockId => $itemName)
+                                            <li>
+                                                {{ $itemName }} - {{ $materialQuantities[$stockId] ?? 0 }} {{ $stocks->find($stockId)->unit_of_measurement ?? '' }}
+                                            </li>
                                         @endforeach
                                     </ul>
                                 @else
@@ -86,16 +88,6 @@
                             </td>
                             <td>{{ $product->quantity ?? 'N/A' }}</td>
                             <td>{{ number_format($product->price, 2) }}</td>
-                            <td>
-                            <button class="btn btn-primary btn-sm add-stock-btn" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#addStockModal" 
-                                    data-id="{{ $product->id }}" 
-                                    data-name="{{ $product->product_name }}"
-                                    {{ is_null($product->quantity) ? 'disabled' : '' }}>
-                                Add Stock
-                            </button>
-                            </td>
                         </tr>
                     @empty
                         <tr>
@@ -103,14 +95,13 @@
                         </tr>
                     @endforelse
                 </tbody>
-
             </table>
         </div>
     </div>
 
 <!-- Add New Product Modal -->
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="max-width: 900px;">
         <div class="modal-content">
             <form action="{{ route('products.storeProduct') }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -119,59 +110,117 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Product Name Field -->
-                    <div class="mb-3">
-                        <label for="product_name" class="form-label">Product Name</label>
-                        <input type="text" class="form-control @error('product_name') is-invalid @enderror" id="product_name" name="product_name" value="{{ old('product_name') }}" required>
-                        
-                        @error('product_name')
-                            <div class="invalid-feedback">
-                                {{ $message }}
+                    <!-- Use Bootstrap grid to create two columns -->
+                    <div class="row">
+                        <!-- Left Column -->
+                        <div class="col-md-6">
+                            <!-- Subcategory Dropdown -->
+                            <div class="mb-3">
+                                <label for="subcategory_id" class="form-label">Subcategory</label>
+                                <select class="form-select" id="subcategory_id" name="subcategory_id" required>
+                                    <option value="">Select Subcategory</option>
+                                    @foreach($subcategories as $subcategory)
+                                        <option value="{{ $subcategory->id }}">{{ $subcategory->sub_name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-                        @enderror
+
+                            <!-- Product Name Field -->
+                            <div class="mb-3">
+                                <label for="product_name" class="form-label">Product Name</label>
+                                <input type="text" class="form-control @error('product_name') is-invalid @enderror" id="product_name" name="product_name" value="{{ old('product_name') }}" required>
+                                @error('product_name')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <!-- Price Field -->
+                            <div class="mb-3">
+                                <label for="price" class="form-label">Price</label>
+                                <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                            </div>
+
+                            <!-- Quantity Field -->
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="quantity" name="quantity">
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="col-md-6">
+                            <!-- Size Options Dropdown -->
+                            <div class="mb-3">
+                                <label for="size_options" class="form-label">Size Options</label>
+                                <select class="form-select" id="size_options" name="size_options">
+                                    <option value="">Select Size</option>
+                                    @foreach($sizeOptions as $size)
+                                        <option value="{{ $size }}">{{ $size }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Unit of Measurement Dropdown -->
+                            <div class="mb-3">
+                                <label for="unit_of_measurement" class="form-label">Unit of Measurement</label>
+                                <select class="form-select" id="unit_of_measurement" name="unit_of_measurement">
+                                    <option value="">Select Unit</option>
+                                    @foreach($unitsOfMeasurement as $unit)
+                                        <option value="{{ $unit }}">{{ $unit }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Product Image Field -->
+                            <div class="mb-3">
+                                <label for="product_image" class="form-label">Product Image</label>
+                                <input type="file" class="form-control" id="product_image" name="product_image" accept="image/*" required onchange="previewImage(event)">
+                            </div>
+
+                            <!-- Image Preview -->
+                            <div class="mb-3 text-center">
+                                <img id="imagePreview" src="" class="img-fluid rounded" style="max-height: 150px; display: none;">
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Price Field -->
-                    <div class="mb-3">
-                        <label for="price" class="form-label">Price</label>
-                        <input type="number" step="0.01" class="form-control" id="price" name="price" required>
-                    </div>
-                    
-                    <!-- Quantity Field -->
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Quantity</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity">
-                    </div>
-                    
-                    <!-- Product Image Field -->
-                    <div class="mb-3">
-                        <label for="product_image" class="form-label">Product Image</label>
-                        <input type="file" class="form-control" id="product_image" name="product_image" accept="image/*" required onchange="previewImage(event)">
-                    </div>
-                    
-                    <div class="mb-3 text-center">
-                        <img id="imagePreview" src="" class="img-fluid rounded" style="max-height: 150px; display: none;">
-                    </div>
-                    
-                    <!-- Items Needed Field -->
-                    <div class="mb-3">
-                        <label class="form-label">Select Item(s) Needed for this product:</label>
-                        <div class="border p-2 rounded" style="max-height: 200px; overflow-y: auto;">
-                            @foreach($stocks->sortBy('item_name') as $stock)
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="items_needed[{{ $stock->id }}]" value="{{ $stock->item_name }}">
-                                    <label class="form-check-label" for="stock_{{ $stock->id }}">
-                                        <strong class="text-black">{{ $stock->item_name }}</strong> <span class="text-success">(Available: {{ $stock->quantity }})</span>
-                                    </label>
+                    <!-- Items Needed Field (Grouped by Category) -->
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label">Select Material(s) Needed for this product:</label>
+                            @foreach($categories as $category)
+                                <div class="mb-3">
+                                    <h6 class="fw-bold">{{ $category->name }}</h6>
+                                    <div class="border p-2 rounded" style="max-height: 150px; overflow-y: auto;">
+                                        @foreach($stocks->where('category_id', $category->id)->sortBy('item_name') as $stock)
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <!-- Material Checkbox and Label -->
+                                                <div class="form-check">
+                                                    <input class="form-check-input material-checkbox" type="checkbox" name="items_needed[{{ $stock->id }}]" value="{{ $stock->item_name }}" data-unit="{{ $stock->unit_of_measurement }}">
+                                                    <label class="form-check-label" for="stock_{{ $stock->id }}">
+                                                        <strong class="text-black">{{ $stock->item_name }}</strong> <span class="text-success">(Available: {{ $stock->quantity }} {{ $stock->unit_of_measurement }})</span>
+                                                    </label>
+                                                </div>
+                                                <!-- Quantity Input (Hidden by Default) -->
+                                                <div class="input-group quantity-input" style="width: 180px; display: none;">
+                                                    <input type="number" class="form-control" name="material_quantities[{{ $stock->id }}]" placeholder="Quantity" min="1">
+                                                    <span class="input-group-text">{{ $stock->unit_of_measurement }}</span>
+                                                    <input type="hidden" name="material_quantity_unit_of_measurement[{{ $stock->id }}]" value="{{ $stock->unit_of_measurement }}">
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
                     </div>
+                </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Product</button>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Product</button>
                 </div>
             </form>
         </div>
@@ -190,7 +239,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p><strong>Product Name:</strong> <span id="product_name"></span></p>
+                    <p><strong>Product Name:</strong> <span id="stock_product_name"></span></p>
                     <div class="mb-3">
                         <label for="add_quantity" class="form-label">Quantity to Add</label>
                         <input type="number" class="form-control" name="add_quantity" id="add_quantity" min="1" required>
@@ -199,6 +248,33 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Price Modal -->
+<div class="modal fade" id="updatePriceModal" tabindex="-1" aria-labelledby="updatePriceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('products.updatePrice') }}" method="POST">
+                @csrf
+                <input type="hidden" name="product_id" id="update_product_id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updatePriceModalLabel">Update Price</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Product Name:</strong> <span id="update_product_name"></span></p>
+                    <div class="mb-3">
+                        <label for="new_price" class="form-label">New Price</label>
+                        <input type="number" class="form-control" name="new_price" id="new_price" step="0.01" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Update Price</button>
                 </div>
             </form>
         </div>
@@ -230,11 +306,29 @@
             let productName = button.getAttribute('data-name');
 
             document.getElementById('product_id').value = productId;
-            document.getElementById('product_name').textContent = productName;
+            document.getElementById('stock_product_name').textContent = productName;
+        });
+        // Update Price Modal
+        document.getElementById('updatePriceModal').addEventListener('show.bs.modal', function (event) {
+            let button = event.relatedTarget;
+            document.getElementById('update_product_id').value = button.getAttribute('data-id');
+            document.getElementById('update_product_name').textContent = button.getAttribute('data-name');
+            document.getElementById('new_price').value = button.getAttribute('data-price');
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Handle material checkbox click
+        document.querySelectorAll('.material-checkbox').forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                const quantityInput = checkbox.closest('.d-flex').querySelector('.quantity-input');
+                if (checkbox.checked) {
+                    quantityInput.style.display = 'flex'; // Show quantity input
+                } else {
+                    quantityInput.style.display = 'none'; // Hide quantity input
+                }
+            });
         });
     });
 </script>
-
-
-
 @endsection
