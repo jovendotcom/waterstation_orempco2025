@@ -374,20 +374,37 @@ class SalesController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $fromDate = $request->input('from_date', now()->subMonth()->toDateString()); 
+        // Kunin ang naka-login na admin user
+        $loggedInAdmin = Auth::guard('sales')->user();
+    
+        // Kung walang naka-login na admin, i-redirect sa login page
+        if (!$loggedInAdmin) {
+            return redirect()->route('saleslogin'); // Palitan ng tamang route para sa admin login
+        }
+    
+        // Kunin ang from_date at to_date mula sa request
+        $fromDate = $request->input('from_date', now()->subMonth()->toDateString());
         $toDate = $request->input('to_date', now()->toDateString());
-
-        return Excel::download(new SalesReportExport($fromDate, $toDate), 'OREMPCO_Waterstation_Sales_Report.xlsx');
+    
+        // I-export ang sales report na nauugnay sa naka-login na admin
+        return Excel::download(new SalesReportExport($fromDate, $toDate, $loggedInAdmin->id), 'OREMPCO_Sales_Report.xlsx');
     }
     
     public function exportPdf(Request $request)
     {
+        $loggedInAdmin = Auth::guard('sales')->user();
+    
+        if (!$loggedInAdmin) {
+            return redirect()->route('saleslogin');
+        }
+    
         // Validate date input
         $fromDate = $request->input('from_date') ? Carbon::parse($request->input('from_date'))->startOfDay() : Carbon::now()->subMonth()->startOfDay();
         $toDate = $request->input('to_date') ? Carbon::parse($request->input('to_date'))->endOfDay() : Carbon::now()->endOfDay();
     
-        // Fetch sales data with related models
+        // Fetch sales data with related models, filtered by staff_id
         $sales = SalesTransaction::whereBetween('created_at', [$fromDate, $toDate])
+            ->where('staff_id', $loggedInAdmin->id) // I-filter base sa staff ID ng naka-login na admin
             ->with('salesItems', 'staff', 'customer')
             ->get();
     

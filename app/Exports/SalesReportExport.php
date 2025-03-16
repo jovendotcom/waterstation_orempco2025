@@ -19,22 +19,26 @@ class SalesReportExport implements FromArray, WithHeadings, WithTitle, WithStyle
 {
     protected $fromDate;
     protected $toDate;
+    protected $staffId; // Idagdag ang property para sa staff_id
     protected $grandTotal = 0;
     protected $itemSummary = [];
 
-    public function __construct($fromDate, $toDate)
+    public function __construct($fromDate, $toDate, $staffId) // Idagdag ang $staffId parameter
     {
         $this->fromDate = Carbon::parse($fromDate)->format('F d, Y');
         $this->toDate = Carbon::parse($toDate)->format('F d, Y');
+        $this->staffId = $staffId; // I-store ang staff_id
     }
 
     public function array(): array
     {
+        // Kunin ang mga sales transactions kung saan ang staff ID ay katulad ng naka-login na admin
         $sales = SalesTransaction::with(['salesItems', 'staff', 'customer'])
             ->whereBetween('created_at', [
                 Carbon::parse($this->fromDate)->startOfDay(),
                 Carbon::parse($this->toDate)->endOfDay(),
             ])
+            ->where('staff_id', $this->staffId) // I-filter base sa staff ID ng naka-login na admin
             ->get();
     
         $exportData = [];
