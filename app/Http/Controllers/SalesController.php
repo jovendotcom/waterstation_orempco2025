@@ -299,8 +299,15 @@ class SalesController extends Controller
     
     public function getCreditSales()
     {
+        $loggedInAdmin = Auth::guard('sales')->user();
+    
+        if (!$loggedInAdmin) {
+            return redirect()->route('saleslogin');
+        }
+    
         $sales = SalesTransaction::with(['customer', 'staff', 'salesItems'])
             ->where('payment_method', 'credit')
+            ->where('staff_id', $loggedInAdmin->id)
             ->get();
     
         return view('sales.credit_sales', compact('sales'));
@@ -321,13 +328,19 @@ class SalesController extends Controller
     
     public function salesHistory(Request $request)
     {
-        // Eager load the customer and sales_items relationships
+        $loggedInAdmin = Auth::guard('sales')->user();
+    
+        if (!$loggedInAdmin) {
+            return redirect()->route('saleslogin');
+        }
+    
         $sales = SalesTransaction::with(['customer', 'salesItems'])
-            ->where('remarks', 'Paid') // Filter only paid transactions
+            ->where('remarks', 'Paid')
+            ->where('staff_id', $loggedInAdmin->id) 
             ->get();
-        
+    
         return view('sales.sales_history', compact('sales'));
-    }        
+    }    
     
     
     public function customerList()
@@ -342,7 +355,20 @@ class SalesController extends Controller
 
     public function getReports()
     {
-        $sales = SalesTransaction::with(['staff', 'customer'])->latest()->get();
+        // Kunin ang naka-login na admin user
+        $loggedInAdmin = Auth::guard('sales')->user();
+    
+        // Kung walang naka-login na admin, i-redirect sa login page
+        if (!$loggedInAdmin) {
+            return redirect()->route('admin.login'); // Palitan ng tamang route para sa admin login
+        }
+    
+        // Kunin ang mga sales transactions kung saan ang staff ID ay katulad ng naka-login na admin
+        $sales = SalesTransaction::with(['staff', 'customer'])
+            ->where('staff_id', $loggedInAdmin->id) // I-filter base sa staff ID ng naka-login na admin
+            ->latest()
+            ->get();
+    
         return view('sales.sales_report', compact('sales'));
     }
 
