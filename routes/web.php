@@ -70,6 +70,10 @@ Route::prefix('admin')->group(function () {
         Route::delete('customers/{id}', [AdminController::class, 'destroy'])->name('customers.destroyAdmin');
         Route::get('/customers/export/{format}', [AdminController::class, 'export'])->name('customers.exportAdmin');
 
+        Route::GET('/salesreport', [AdminController::class, 'getReports'])->name('admin.reportsAdmin');
+        Route::get('/sales/export-excel', [AdminController::class, 'exportExcel'])->name('admin.export.excel');
+        Route::get('/sales/export-pdf', [AdminController::class, 'exportPdf'])->name('admin.export.pdf');
+
         Route::GET('/admin_userprofile', [AdminController::class, 'userProfile'])->name('admin.userProfile');
         Route::post('/user/profile/update-password', [AdminController::class, 'changePassword'])->name('admin.changePassword');
     });

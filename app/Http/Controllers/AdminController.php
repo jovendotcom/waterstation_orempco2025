@@ -25,6 +25,8 @@ use App\Exports\StocksCountExport;
 use PDF;
 use App\Exports\StocksCountExportAdmin;
 use App\Exports\CustomersExportAdmin;
+use Illuminate\Support\Carbon;
+use App\Exports\SalesReportExportAdmin;
 
 class AdminController extends Controller
 {
@@ -804,4 +806,64 @@ class AdminController extends Controller
         return redirect()->route('sales.customerlist')
             ->with('success', 'Customer ' . $customer->full_name . ' deleted successfully!');
     }
+
+    //for sales report
+    public function getReports()
+    {
+        $sales = SalesTransaction::with(['staff', 'customer'])->latest()->get();
+        return view('admin.sales_report', compact('sales'));
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $fromDate = $request->input('from_date', now()->subMonth()->toDateString()); 
+        $toDate = $request->input('to_date', now()->toDateString());
+
+        return Excel::download(new SalesReportExportAdmin($fromDate, $toDate), 'OREMPCO_Sales_Report.xlsx');
+    }
+    
+    public function exportPdf(Request $request)
+    {
+        // Validate date input
+        $fromDate = $request->input('from_date') ? Carbon::parse($request->input('from_date'))->startOfDay() : Carbon::now()->subMonth()->startOfDay();
+        $toDate = $request->input('to_date') ? Carbon::parse($request->input('to_date'))->endOfDay() : Carbon::now()->endOfDay();
+    
+        // Fetch sales data with related models
+        $sales = SalesTransaction::whereBetween('created_at', [$fromDate, $toDate])
+            ->with('salesItems', 'staff', 'customer')
+            ->get();
+    
+        // Generate Item Summary (Group by product name)
+        $itemSummary = $sales->flatMap->salesItems->groupBy('product_name')->map(function ($items, $name) {
+            return [
+                'name' => $name,
+                'quantity' => $items->sum('quantity'),
+                'total' => $items->sum('subtotal')
+            ];
+        });
+    
+        // Generate Charge Summary (Payment breakdown)
+        $chargeSummary = $sales->groupBy('payment_method')->map(function ($transactions, $method) {
+            return [
+                'total' => $transactions->sum(fn ($sale) => $sale->salesItems->sum('subtotal')),
+                'member' => $transactions->where('customer.membership_status', 'Member')->sum(fn ($sale) => $sale->salesItems->sum('subtotal')),
+                'non_member' => $transactions->where('customer.membership_status', 'Non-Member')->sum(fn ($sale) => $sale->salesItems->sum('subtotal'))
+            ];
+        });
+    
+        // Format dates for the filename
+        $formattedFromDate = Carbon::parse($fromDate)->format('Y-m-d');
+        $formattedToDate = Carbon::parse($toDate)->format('Y-m-d');
+    
+        // Load view into PDF and pass variables
+        $pdf = Pdf::loadView('exports.sales_report_admin', compact('sales', 'itemSummary', 'chargeSummary', 'fromDate', 'toDate'))
+            ->setPaper('A4', 'landscape')
+            ->setOption('margin-top', '10mm')
+            ->setOption('margin-bottom', '10mm')
+            ->setOption('margin-left', '10mm')
+            ->setOption('margin-right', '10mm');
+    
+        return $pdf->download("OREMPCO - Sales Report ({$formattedFromDate} to {$formattedToDate}).pdf");
+    }
+
 }

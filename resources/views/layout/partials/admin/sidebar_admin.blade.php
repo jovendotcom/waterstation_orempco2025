@@ -54,7 +54,7 @@
                 Customers List
             </a>
 
-            <a class="nav-link text-white {{ request()->routeIs('sales.stocksCount') ? 'active' : '' }}" href="{{ route('sales.stocksCount') }}">
+            <a class="nav-link text-white {{ request()->routeIs('admin.reportsAdmin') ? 'active' : '' }}" href="{{ route('admin.reportsAdmin') }}">
                 <div class="sb-nav-link-icon text-white"><i class="fas fa-dollar-sign"></i></div>
                 Reports
             </a>
