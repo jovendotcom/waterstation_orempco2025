@@ -57,6 +57,19 @@ Route::prefix('admin')->group(function () {
         Route::put('/subcategories/update', [AdminController::class, 'updateSubCategories'])->name('admin.subcategory.update');
         Route::delete('/subcategories/destroy/{id}', [AdminController::class, 'destroySubCategories'])->name('admin.subcategory.destroy');
 
+        Route::GET('/stockscount', [AdminController::class, 'countStocks'])->name('admin.stocksCount');
+        Route::post('/stocks/store', [AdminController::class, 'storeStockCount'])->name('stocks.storeAdmin');
+        Route::patch('/stocks/update', [AdminController::class, 'updateStockCount'])->name('stocks.updateAdmin');
+        Route::get('/stocks/export/{format}', [AdminController::class, 'exportStocks'])->name('stocks.exportAdmin');
+
+        Route::GET('/customerlist', [AdminController::class, 'customerList'])->name('admin.customerlist');
+        Route::post('/customers', [AdminController::class, 'storeCustomer'])->name('customers.storeCustomerAdmin');
+        Route::post('/customers/outside', [AdminController::class, 'storeOutside'])->name('customers.storeOutsideAdmin');
+        Route::get('/get-departments', [AdminController::class, 'getDepartments']);//this is to show the departments in the dropdown
+        Route::put('customers/{id}', [AdminController::class, 'update'])->name('customers.updateAdmin');
+        Route::delete('customers/{id}', [AdminController::class, 'destroy'])->name('customers.destroyAdmin');
+        Route::get('/customers/export/{format}', [AdminController::class, 'export'])->name('customers.exportAdmin');
+
         Route::GET('/admin_userprofile', [AdminController::class, 'userProfile'])->name('admin.userProfile');
         Route::post('/user/profile/update-password', [AdminController::class, 'changePassword'])->name('admin.changePassword');
     });
@@ -90,10 +103,6 @@ Route::prefix('sales')->group(function () {
         Route::post('/customers', [CustomerListController::class, 'store'])->name('customers.store');
         Route::post('/customers/outside', [CustomerListController::class, 'storeOutside'])->name('customers.storeOutside');
         Route::get('/get-departments', [CustomerListController::class, 'getDepartments']);//this is to show the departments in the dropdown
-
-        Route::put('customers/{id}', [CustomerListController::class, 'update'])->name('customers.update');
-        Route::delete('customers/{id}', [CustomerListController::class, 'destroy'])->name('customers.destroy');
-
         Route::get('/customers/export/{format}', [CustomerListController::class, 'export'])->name('customers.export');
 
 

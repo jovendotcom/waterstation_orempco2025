@@ -4,7 +4,7 @@
         <div class="nav-item text-white">
             <br>
             <a class="nav-link text-white">
-                &nbsp&nbsp&nbsp&nbsp&nbsp<strong>Menu</strong> <!-- This is the text you want at the top -->
+                &nbsp&nbsp&nbsp&nbsp&nbsp<strong>SALES MODULE</strong> <!-- This is the text you want at the top -->
             </a>
         </div>
 

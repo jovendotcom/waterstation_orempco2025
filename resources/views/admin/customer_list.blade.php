@@ -1,4 +1,4 @@
-@extends('layout.sales')
+@extends('layout.admin')
 
 @section('title', 'Customer\'s List')
 
@@ -6,7 +6,7 @@
 
 <h1 class="mt-4">Customer List</h1>
 <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{{ route('sales.transaction') }}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
     <li class="breadcrumb-item active">Customer List</li>
 </ol>
 
@@ -46,8 +46,8 @@
                 <i class="fas fa-file-export me-1"></i> Export
             </button>
             <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ route('customers.export', ['format' => 'excel']) }}"><i class="fas fa-file-excel me-1"></i> Export as Excel</a></li>
-                <li><a class="dropdown-item" href="{{ route('customers.export', ['format' => 'pdf']) }}"><i class="fas fa-file-pdf me-1"></i> Export as PDF</a></li>
+                <li><a class="dropdown-item" href="{{ route('customers.exportAdmin', ['format' => 'excel']) }}"><i class="fas fa-file-excel me-1"></i> Export as Excel</a></li>
+                <li><a class="dropdown-item" href="{{ route('customers.exportAdmin', ['format' => 'pdf']) }}"><i class="fas fa-file-pdf me-1"></i> Export as PDF</a></li>
             </ul>
         </div>
     </div>
@@ -67,7 +67,8 @@
                     <th>Customer Full Name</th>
                     <th>Department</th>
                     <th>Customer Type</th>
-                    <th>Member</th>
+                    <th>Member/Non-Member</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -84,6 +85,25 @@
                                 <span class="badge bg-danger">Non-Member</span>
                             @endif
                         </td>
+                        <td>
+                            <!-- Edit Button -->
+                            <button 
+                                class="btn btn-warning btn-sm" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#editCustomerModal"
+                                data-customer-id="{{ $customer->id }}"
+                                data-customer-name="{{ $customer->full_name }}"
+                                data-customer-type="{{ $customer->type }}"
+                                data-customer-department="{{ $customer->department }}"
+                                data-customer-employee-id="{{ $customer->employee_id }}"
+                                data-customer-membership-status="{{ $customer->membership_status }}">
+                                Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteCustomerModal" 
+                                data-customer-id="{{ $customer->id }}" data-customer-name="{{ $customer->full_name }}">
+                                Delete
+                            </button>
+                        </td>
                     </tr>
                 @empty
                     <tr>
@@ -94,6 +114,134 @@
         </table>
     </div>
 </div>
+
+<!-- Edit Customer Modal -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCustomerModalLabel">Edit Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" id="editCustomerForm">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <!-- Type Selection (Disabled Radio Buttons) -->
+                    <div class="mb-3">
+                        <label class="form-label">Type of Customer</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="type" id="editTypeEmployee" value="Employee" disabled>
+                            <label class="form-check-label" for="editTypeEmployee">Employee</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="type" id="editTypeDepartment" value="Department" disabled>
+                            <label class="form-check-label" for="editTypeDepartment">Department</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="type" id="editTypeOutside" value="Outside" disabled>
+                            <label class="form-check-label" for="editTypeOutside">Outside Customer</label>
+                        </div>
+                    </div>
+
+                    <!-- Membership Status Toggle (for Employee) -->
+                    <div id="editMembershipStatus" class="mb-3 d-none">
+                        <label class="form-label">Membership Status</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="membership_status" id="editMember" value="Member">
+                            <label class="form-check-label" for="editMember">Member</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="membership_status" id="editNonMember" value="Non-Member">
+                            <label class="form-check-label" for="editNonMember">Non-Member</label>
+                        </div>
+                    </div>
+
+                    <!-- Department Input -->
+                    <div id="editDepartmentField" class="d-none">
+                        <div class="mb-3">
+                            <label for="editDepartmentInput" class="form-label">Department Name</label>
+                            <input type="text" class="form-control" id="editDepartmentInput" name="department" placeholder="Enter department name">
+                        </div>
+                    </div>
+
+                    <!-- Employee Fields -->
+                    <div id="editEmployeeFields" class="d-none">
+                        <div class="mb-3">
+                            <label for="editEmployeeId" class="form-label">Member ID</label>
+                            <input type="text" class="form-control" id="editEmployeeId" name="employee_id" placeholder="Enter employee ID" disabled>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label for="editFullName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="editFullName" name="full_name" placeholder="Full Name" disabled>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editEmployeeDepartment" class="form-label">Department</label>
+                            <select class="form-select" id="editEmployeeDepartment" name="department">
+                                <option value="" disabled>Select a department</option>
+                                @foreach($departments as $department)
+                                    <option value="{{ $department }}">{{ $department }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Outside Customer Fields -->
+                    <div id="editOutsideFields" class="d-none">
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label for="editOutsideLastName" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="editOutsideLastName" name="outside_last_name" placeholder="Last Name">
+                            </div>
+                            <div class="col">
+                                <label for="editOutsideFirstName" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="editOutsideFirstName" name="outside_first_name" placeholder="First Name">
+                            </div>
+                            <div class="col">
+                                <label for="editOutsideMiddleInitial" class="form-label">Middle Initial</label>
+                                <input type="text" maxlength="1" class="form-control" id="editOutsideMiddleInitial" name="outside_middle_initial" placeholder="M.I.">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteCustomerModal" tabindex="-1" aria-labelledby="deleteCustomerModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCustomerModalLabel">Delete Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete <strong><span id="customerNameToDelete"></span></strong>?<br>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="deleteCustomerForm">
+                    @csrf
+                    @method('DELETE') <!-- Use this for DELETE request -->
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 
 <!-- Add Customer Modal (Employee & Department) -->
@@ -113,7 +261,7 @@
                     </ul>
                 </div>
             @endif
-            <form method="POST" action="{{ route('customers.store') }}">
+            <form method="POST" action="{{ route('customers.storeCustomerAdmin') }}">
                 @csrf
                 <div class="modal-body">
                     <!-- Type Selection (Radio Buttons) -->
@@ -235,7 +383,7 @@
                     </ul>
                 </div>
             @endif
-            <form method="POST" action="{{ route('customers.storeOutside') }}">
+            <form method="POST" action="{{ route('customers.storeOutsideAdmin') }}">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
@@ -346,7 +494,7 @@ window.onload = function () {
 
         // Update form action
         const form = document.getElementById('editCustomerForm');
-        form.action = '{{ route('customers.update', ['id' => '_id_']) }}'.replace('_id_', customerId);
+        form.action = '{{ route('customers.updateAdmin', ['id' => '_id_']) }}'.replace('_id_', customerId);
 
         // Hide all fields initially
         document.getElementById('editDepartmentField').classList.add('d-none');
@@ -399,6 +547,31 @@ window.onload = function () {
         }
     });
 });
+
+
+
+    // Delete Customer Modal
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteCustomerModal = document.getElementById('deleteCustomerModal');
+        
+        deleteCustomerModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            
+            // Get the customer name and ID from the data attributes
+            const customerId = button.getAttribute('data-customer-id');
+            const customerName = button.getAttribute('data-customer-name');
+            
+            // Set the modal form action
+            const deleteForm = document.getElementById('deleteCustomerForm');
+            deleteForm.action = "{{ route('customers.destroyAdmin', '') }}/" + customerId;
+
+            // Set the customer's name in the modal
+            document.getElementById('customerNameToDelete').textContent = customerName;
+        });
+    });
+
+
+
 
 </script>
 

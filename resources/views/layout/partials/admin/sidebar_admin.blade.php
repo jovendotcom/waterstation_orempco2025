@@ -1,5 +1,13 @@
 <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion" style="background: linear-gradient(180deg, #28a745, #cddc39);">
     <div class="sb-sidenav-menu">
+
+        <div class="nav-item text-white">
+            <br>
+            <a class="nav-link text-white">
+                &nbsp&nbsp&nbsp&nbsp&nbsp<strong>ADMIN MODULE</strong> <!-- This is the text you want at the top -->
+            </a>
+        </div>
+
         <div class="nav">
             <br>
             <!-- Dashboard Link -->
@@ -34,6 +42,21 @@
             <a class="nav-link text-white {{ request()->routeIs('admin.productInventory') ? 'active' : '' }}" href="{{ route('admin.productInventory') }}">
                 <div class="sb-nav-link-icon text-white"><i class="fa-sharp-duotone fa-solid fa-droplet"></i></div>
                 Product Inventory
+            </a>
+
+            <a class="nav-link text-white {{ request()->routeIs('admin.stocksCount') ? 'active' : '' }}" href="{{ route('admin.stocksCount') }}">
+                <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                Stocks Count
+            </a>
+
+            <a class="nav-link text-white {{ request()->routeIs('admin.customerlist') ? 'active' : '' }}" href="{{ route('admin.customerlist') }}">
+                <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-person-dress"></i></div>
+                Customers List
+            </a>
+
+            <a class="nav-link text-white {{ request()->routeIs('sales.stocksCount') ? 'active' : '' }}" href="{{ route('sales.stocksCount') }}">
+                <div class="sb-nav-link-icon text-white"><i class="fas fa-dollar-sign"></i></div>
+                Reports
             </a>
 
             <a class="nav-link text-white {{ request()->routeIs('admin.userProfile') ? 'active' : '' }}" href="{{ route('admin.userProfile') }}">
