@@ -478,8 +478,7 @@ window.onload = function () {
 
 
 
-    // Edit Customer Modal
-    document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
     const editCustomerModal = document.getElementById('editCustomerModal');
 
     editCustomerModal.addEventListener('show.bs.modal', function (event) {
@@ -525,8 +524,8 @@ window.onload = function () {
             document.getElementById('editTypeDepartment').checked = true;
             document.getElementById('editDepartmentField').classList.remove('d-none');
 
-            // Populate fields
-            document.getElementById('editDepartmentInput').value = fullName || '';
+            // Populate the department name field
+            document.getElementById('editDepartmentInput').value = fullName || ''; // Use fullName for department name
         }
         // Handle Outside Customer (Non-Member)
         else if (customerType === 'Outside' || membershipStatus === 'Non-Member') {

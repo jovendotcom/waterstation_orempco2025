@@ -145,18 +145,23 @@
                         <div class="col-md-6">
                             <!-- Subcategory Dropdown -->
                             <div class="mb-3">
-                                <label for="subcategory_id" class="form-label">Subcategory</label>
+                                <label for="subcategory_id" class="form-label">Subcategory <span class="text-danger">*</span></label>
                                 <select class="form-select" id="subcategory_id" name="subcategory_id" required>
                                     <option value="">Select Subcategory</option>
                                     @foreach($subcategories as $subcategory)
                                         <option value="{{ $subcategory->id }}">{{ $subcategory->sub_name }}</option>
                                     @endforeach
                                 </select>
+                                @error('subcategory_id')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
 
                             <!-- Product Name Field -->
                             <div class="mb-3">
-                                <label for="product_name" class="form-label">Product Name</label>
+                                <label for="product_name" class="form-label">Product Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('product_name') is-invalid @enderror" id="product_name" name="product_name" value="{{ old('product_name') }}" required>
                                 @error('product_name')
                                     <div class="invalid-feedback">
@@ -167,14 +172,20 @@
 
                             <!-- Price Field -->
                             <div class="mb-3">
-                                <label for="price" class="form-label">Price</label>
-                                <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                                <label for="price" class="form-label">Price <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control @error('price') is-invalid @enderror" id="price" name="price" required>
+                                @error('price')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
 
                             <!-- Quantity Field -->
                             <div class="mb-3">
-                                <label for="quantity" class="form-label">Quantity</label>
+                                <label for="quantity" class="form-label">Quantity (Optional)</label>
                                 <input type="number" class="form-control" id="quantity" name="quantity">
+                                <small class="text-muted">Leave this field empty if the product does not have a fixed quantity.</small>
                             </div>
                         </div>
 
@@ -182,30 +193,29 @@
                         <div class="col-md-6">
                             <!-- Size Options Dropdown -->
                             <div class="mb-3">
-                                <label for="size_options" class="form-label">Size Options</label>
-                                <select class="form-select" id="size_options" name="size_options">
+                                <label for="size_options" class="form-label">Size Options <span class="text-danger">*</span></label>
+                                <select class="form-select @error('size_options') is-invalid @enderror" id="size_options" name="size_options" required>
                                     <option value="">Select Size</option>
                                     @foreach($sizeOptions as $size)
                                         <option value="{{ $size }}">{{ $size }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-
-                            <!-- Unit of Measurement Dropdown -->
-                            <div class="mb-3">
-                                <label for="unit_of_measurement" class="form-label">Unit of Measurement</label>
-                                <select class="form-select" id="unit_of_measurement" name="unit_of_measurement">
-                                    <option value="">Select Unit</option>
-                                    @foreach($unitsOfMeasurement as $unit)
-                                        <option value="{{ $unit }}">{{ $unit }}</option>
-                                    @endforeach
-                                </select>
+                                @error('size_options')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
 
                             <!-- Product Image Field -->
                             <div class="mb-3">
-                                <label for="product_image" class="form-label">Product Image</label>
-                                <input type="file" class="form-control" id="product_image" name="product_image" accept="image/*" required onchange="previewImage(event)">
+                                <label for="product_image" class="form-label">Product Image <span class="text-danger">*</span></label>
+                                <input type="file" class="form-control @error('product_image') is-invalid @enderror" id="product_image" name="product_image" accept="image/*" required onchange="previewImage(event)">
+                                @error('product_image')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
 
                             <!-- Image Preview -->
@@ -227,7 +237,7 @@
                                             <div class="d-flex align-items-center justify-content-between mb-2">
                                                 <!-- Material Checkbox and Label -->
                                                 <div class="form-check">
-                                                    <input class="form-check-input material-checkbox" type="checkbox" name="items_needed[{{ $stock->id }}]" value="{{ $stock->item_name }}" data-unit="{{ $stock->unit_of_measurement }}">
+                                                    <input class="form-check-input material-checkbox" type="checkbox" name="items_needed[{{ $stock->id }}]" value="{{ $stock->item_name }}" data-unit="{{ $stock->unit_of_measurement }}" data-stock-id="{{ $stock->id }}">
                                                     <label class="form-check-label" for="stock_{{ $stock->id }}">
                                                         <strong class="text-black">{{ $stock->item_name }}</strong> <span class="text-success">(Available: {{ $stock->quantity }} {{ $stock->unit_of_measurement }})</span>
                                                     </label>
@@ -236,7 +246,6 @@
                                                 <div class="input-group quantity-input" style="width: 180px; display: none;">
                                                     <input type="number" class="form-control" name="material_quantities[{{ $stock->id }}]" placeholder="Quantity" min="1">
                                                     <span class="input-group-text">{{ $stock->unit_of_measurement }}</span>
-                                                    <input type="hidden" name="material_quantity_unit_of_measurement[{{ $stock->id }}]" value="{{ $stock->unit_of_measurement }}">
                                                 </div>
                                             </div>
                                         @endforeach
@@ -350,11 +359,17 @@
         // Handle material checkbox click
         document.querySelectorAll('.material-checkbox').forEach(function (checkbox) {
             checkbox.addEventListener('change', function () {
-                const quantityInput = checkbox.closest('.d-flex').querySelector('.quantity-input');
+                const stockId = checkbox.getAttribute('data-stock-id');
+                const quantityInput = checkbox.closest('.d-flex').querySelector('.quantity-input input');
+
                 if (checkbox.checked) {
-                    quantityInput.style.display = 'flex'; // Show quantity input
+                    // Show quantity input and make it required
+                    checkbox.closest('.d-flex').querySelector('.quantity-input').style.display = 'flex';
+                    quantityInput.setAttribute('required', 'required');
                 } else {
-                    quantityInput.style.display = 'none'; // Hide quantity input
+                    // Hide quantity input and remove the required attribute
+                    checkbox.closest('.d-flex').querySelector('.quantity-input').style.display = 'none';
+                    quantityInput.removeAttribute('required');
                 }
             });
         });

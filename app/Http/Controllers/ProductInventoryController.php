@@ -38,16 +38,14 @@ class ProductInventoryController extends Controller
     {
         // Validate request
         $request->validate([
+            'subcategory_id' => 'required|exists:subcategories,id',
             'product_name' => 'required|string|max:255',
             'price' => 'required|numeric',
+            'size_options' => 'required|string',
+            'product_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'items_needed' => 'required|array',
+            'material_quantities' => 'required|array',
             'quantity' => 'nullable|integer|min:0',
-            'product_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'items_needed' => 'nullable|array',
-            'material_quantities' => 'nullable|array',
-            'material_quantity_unit_of_measurement' => 'nullable|array', // Add this line
-            'subcategory_id' => 'required|exists:subcategories,id',
-            'size_options' => 'nullable|string',
-            'unit_of_measurement' => 'nullable|string',
         ]);
     
         // Check if the product with the same name and price already exists
@@ -68,7 +66,6 @@ class ProductInventoryController extends Controller
         // Decode selected items
         $itemsNeeded = $request->items_needed ?? [];
         $materialQuantities = $request->material_quantities ?? [];
-        $materialQuantityUnits = $request->material_quantity_unit_of_measurement ?? [];
     
         // Check stock availability
         $productQuantity = $request->quantity ?? null;
@@ -92,10 +89,8 @@ class ProductInventoryController extends Controller
             'product_image' => $imagePath,
             'items_needed' => json_encode($itemsNeeded),
             'material_quantities' => json_encode($materialQuantities),
-            'material_quantity_unit_of_measurement' => json_encode($materialQuantityUnits), // Add this line
             'subcategory_id' => $request->subcategory_id,
             'size_options' => $request->size_options,
-            'unit_of_measurement' => $request->unit_of_measurement,
         ]);
     
         // Deduct stock quantities if product has a set quantity
