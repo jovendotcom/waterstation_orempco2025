@@ -739,14 +739,22 @@ class AdminController extends Controller
         } elseif ($customer->type === 'Department') {
             // Handle Department type
             $validatedData = $request->validate([
-                'department' => 'required|string|max:255', // Validate department name
+                'department_name' => 'required|string|max:255', // Validate department name
             ]);
     
-            // Update both full_name and department columns
+            // Get the old department name
+            $oldDepartmentName = $customer->full_name;
+    
+            // Update the department's full_name and department columns
             $customer->update([
-                'full_name' => $validatedData['department'], // Update full_name with department name
-                'department' => $validatedData['department'], // Update department column
+                'full_name' => $validatedData['department_name'], // Update full_name with new department name
+                'department' => $validatedData['department_name'], // Update department column
             ]);
+    
+            // Cascade the update to all employees under this department
+            Customer::where('department', $oldDepartmentName)
+                ->where('type', 'Employee')
+                ->update(['department' => $validatedData['department_name']]);
         } elseif ($customer->type === 'Outside' || $customer->membership_status === 'Non-Member') {
             // Handle Outside or Non-Member type
             $validatedData = $request->validate([
@@ -775,7 +783,7 @@ class AdminController extends Controller
         $customer = Customer::findOrFail($id);
         $customer->delete();
     
-        // Pass the customer name to the session or as part of the redirect data
+        // Pass the customer name to the session or as  part of the redirect data
         return redirect()->route('admin.customerlist')
             ->with('success', 'Customer ' . $customer->full_name . ' deleted successfully!');
     }

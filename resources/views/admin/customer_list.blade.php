@@ -167,7 +167,7 @@
                     <div id="editDepartmentField" class="d-none">
                         <div class="mb-3">
                             <label for="editDepartmentInput" class="form-label">Department Name</label>
-                            <input type="text" class="form-control" id="editDepartmentInput" name="department" placeholder="Enter department name">
+                            <input type="text" class="form-control" id="editDepartmentInput" name="department_name" placeholder="Enter department name">
                         </div>
                     </div>
 

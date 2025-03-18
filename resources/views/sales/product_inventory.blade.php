@@ -103,7 +103,7 @@
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog" style="max-width: 900px;">
         <div class="modal-content">
-            <form action="{{ route('products.storeProduct') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('products.storeProductAdmin') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title" id="addUserModalLabel">Add New Product</h5>
@@ -116,18 +116,23 @@
                         <div class="col-md-6">
                             <!-- Subcategory Dropdown -->
                             <div class="mb-3">
-                                <label for="subcategory_id" class="form-label">Subcategory</label>
+                                <label for="subcategory_id" class="form-label">Subcategory <span class="text-danger">*</span></label>
                                 <select class="form-select" id="subcategory_id" name="subcategory_id" required>
                                     <option value="">Select Subcategory</option>
                                     @foreach($subcategories as $subcategory)
                                         <option value="{{ $subcategory->id }}">{{ $subcategory->sub_name }}</option>
                                     @endforeach
                                 </select>
+                                @error('subcategory_id')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
 
                             <!-- Product Name Field -->
                             <div class="mb-3">
-                                <label for="product_name" class="form-label">Product Name</label>
+                                <label for="product_name" class="form-label">Product Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('product_name') is-invalid @enderror" id="product_name" name="product_name" value="{{ old('product_name') }}" required>
                                 @error('product_name')
                                     <div class="invalid-feedback">
@@ -138,14 +143,20 @@
 
                             <!-- Price Field -->
                             <div class="mb-3">
-                                <label for="price" class="form-label">Price</label>
-                                <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                                <label for="price" class="form-label">Price <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control @error('price') is-invalid @enderror" id="price" name="price" required>
+                                @error('price')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
 
                             <!-- Quantity Field -->
                             <div class="mb-3">
-                                <label for="quantity" class="form-label">Quantity</label>
+                                <label for="quantity" class="form-label">Quantity (Optional)</label>
                                 <input type="number" class="form-control" id="quantity" name="quantity">
+                                <small class="text-muted">Leave this field empty if the product does not have a fixed quantity.</small>
                             </div>
                         </div>
 
@@ -153,30 +164,29 @@
                         <div class="col-md-6">
                             <!-- Size Options Dropdown -->
                             <div class="mb-3">
-                                <label for="size_options" class="form-label">Size Options</label>
-                                <select class="form-select" id="size_options" name="size_options">
+                                <label for="size_options" class="form-label">Size Options <span class="text-danger">*</span></label>
+                                <select class="form-select @error('size_options') is-invalid @enderror" id="size_options" name="size_options" required>
                                     <option value="">Select Size</option>
                                     @foreach($sizeOptions as $size)
                                         <option value="{{ $size }}">{{ $size }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-
-                            <!-- Unit of Measurement Dropdown -->
-                            <div class="mb-3">
-                                <label for="unit_of_measurement" class="form-label">Unit of Measurement</label>
-                                <select class="form-select" id="unit_of_measurement" name="unit_of_measurement">
-                                    <option value="">Select Unit</option>
-                                    @foreach($unitsOfMeasurement as $unit)
-                                        <option value="{{ $unit }}">{{ $unit }}</option>
-                                    @endforeach
-                                </select>
+                                @error('size_options')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
 
                             <!-- Product Image Field -->
                             <div class="mb-3">
-                                <label for="product_image" class="form-label">Product Image</label>
-                                <input type="file" class="form-control" id="product_image" name="product_image" accept="image/*" required onchange="previewImage(event)">
+                                <label for="product_image" class="form-label">Product Image <span class="text-danger">*</span></label>
+                                <input type="file" class="form-control @error('product_image') is-invalid @enderror" id="product_image" name="product_image" accept="image/*" required onchange="previewImage(event)">
+                                @error('product_image')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
 
                             <!-- Image Preview -->
@@ -198,7 +208,7 @@
                                             <div class="d-flex align-items-center justify-content-between mb-2">
                                                 <!-- Material Checkbox and Label -->
                                                 <div class="form-check">
-                                                    <input class="form-check-input material-checkbox" type="checkbox" name="items_needed[{{ $stock->id }}]" value="{{ $stock->item_name }}" data-unit="{{ $stock->unit_of_measurement }}">
+                                                    <input class="form-check-input material-checkbox" type="checkbox" name="items_needed[{{ $stock->id }}]" value="{{ $stock->item_name }}" data-unit="{{ $stock->unit_of_measurement }}" data-stock-id="{{ $stock->id }}">
                                                     <label class="form-check-label" for="stock_{{ $stock->id }}">
                                                         <strong class="text-black">{{ $stock->item_name }}</strong> <span class="text-success">(Available: {{ $stock->quantity }} {{ $stock->unit_of_measurement }})</span>
                                                     </label>
@@ -207,7 +217,6 @@
                                                 <div class="input-group quantity-input" style="width: 180px; display: none;">
                                                     <input type="number" class="form-control" name="material_quantities[{{ $stock->id }}]" placeholder="Quantity" min="1">
                                                     <span class="input-group-text">{{ $stock->unit_of_measurement }}</span>
-                                                    <input type="hidden" name="material_quantity_unit_of_measurement[{{ $stock->id }}]" value="{{ $stock->unit_of_measurement }}">
                                                 </div>
                                             </div>
                                         @endforeach
@@ -227,59 +236,7 @@
     </div>
 </div>
 
-<!-- Add Stock Modal -->
-<div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="{{ route('products.addStock') }}" method="POST">
-                @csrf
-                <input type="hidden" name="product_id" id="product_id">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addStockModalLabel">Add Stock</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p><strong>Product Name:</strong> <span id="stock_product_name"></span></p>
-                    <div class="mb-3">
-                        <label for="add_quantity" class="form-label">Quantity to Add</label>
-                        <input type="number" class="form-control" name="add_quantity" id="add_quantity" min="1" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Stock</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
-<!-- Update Price Modal -->
-<div class="modal fade" id="updatePriceModal" tabindex="-1" aria-labelledby="updatePriceModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="{{ route('products.updatePrice') }}" method="POST">
-                @csrf
-                <input type="hidden" name="product_id" id="update_product_id">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="updatePriceModalLabel">Update Price</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p><strong>Product Name:</strong> <span id="update_product_name"></span></p>
-                    <div class="mb-3">
-                        <label for="new_price" class="form-label">New Price</label>
-                        <input type="number" class="form-control" name="new_price" id="new_price" step="0.01" min="0" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning">Update Price</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <script>
     function previewImage(event) {
