@@ -727,6 +727,7 @@ class AdminController extends Controller
         $customer = Customer::findOrFail($id);
     
         if ($customer->type === 'Employee') {
+            // Handle Employee type
             $validatedData = $request->validate([
                 'department' => 'required|string|max:255',
                 'membership_status' => 'required|in:Member,Non-Member',
@@ -736,13 +737,18 @@ class AdminController extends Controller
                 'membership_status' => $validatedData['membership_status'],
             ]);
         } elseif ($customer->type === 'Department') {
+            // Handle Department type
             $validatedData = $request->validate([
                 'department' => 'required|string|max:255', // Validate department name
             ]);
+    
+            // Update both full_name and department columns
             $customer->update([
                 'full_name' => $validatedData['department'], // Update full_name with department name
+                'department' => $validatedData['department'], // Update department column
             ]);
         } elseif ($customer->type === 'Outside' || $customer->membership_status === 'Non-Member') {
+            // Handle Outside or Non-Member type
             $validatedData = $request->validate([
                 'outside_last_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'],
                 'outside_first_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'],
@@ -770,7 +776,7 @@ class AdminController extends Controller
         $customer->delete();
     
         // Pass the customer name to the session or as part of the redirect data
-        return redirect()->route('sales.customerlist')
+        return redirect()->route('admin.customerlist')
             ->with('success', 'Customer ' . $customer->full_name . ' deleted successfully!');
     }
 
