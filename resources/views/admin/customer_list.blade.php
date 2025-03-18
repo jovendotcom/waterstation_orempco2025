@@ -30,9 +30,15 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div></div>
     <div>
-        <!-- Add New Customer -->
-        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
-            <i class="fas fa-user-plus me-1"></i> Add New Customer
+
+        <!-- Add Department Button -->
+        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">
+            <i class="fas fa-building me-1"></i> Add New Department
+        </button>
+
+        <!-- Add Employee Button -->
+        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+            <i class="fas fa-user-plus me-1"></i> Add New Employee
         </button>
 
         <!-- Add Outside Customer -->
@@ -244,12 +250,12 @@
 
 
 
-<!-- Add Customer Modal (Employee & Department) -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addUserModalLabel">Add New Customer</h5>
+                <h5 class="modal-title" id="addEmployeeModalLabel">Add New Employee</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             @if ($errors->any())
@@ -261,99 +267,126 @@
                     </ul>
                 </div>
             @endif
-            <form method="POST" action="{{ route('customers.storeCustomerAdmin') }}">
+            <form method="POST" action="{{ route('customers.storeEmployeeAdmin') }}">
                 @csrf
                 <div class="modal-body">
-                    <!-- Type Selection (Radio Buttons) -->
+                    <!-- Employee ID -->
                     <div class="mb-3">
-                        <label class="form-label">Type of Customer</label>
-                        <div class="form-check">
-                            <input class="form-check-input @error('type') is-invalid @enderror" type="radio" name="type" id="typeEmployee" value="Employee" {{ old('type', 'Employee') == 'Employee' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="typeEmployee">Employee</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input @error('type') is-invalid @enderror" type="radio" name="type" id="typeDepartment" value="Department" {{ old('type') == 'Department' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="typeDepartment">Department</label>
-                        </div>
-                        @error('type')
+                        <label for="employeeId" class="form-label">Employee ID</label>
+                        <input type="text" class="form-control @error('employee_id') is-invalid @enderror" id="employeeId" name="employee_id" placeholder="Enter employee ID" value="{{ old('employee_id') }}" required>
+                        @error('employee_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <!-- Membership Status (Radio Buttons) -->
-                    <div id="membershipStatus" class="mb-3 d-none">
+                    <!-- Full Name -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="lastName" class="form-label">Last Name</label>
+                            <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="lastName" name="last_name" placeholder="Last Name" value="{{ old('last_name') }}" required>
+                            @error('last_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col">
+                            <label for="firstName" class="form-label">First Name</label>
+                            <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="firstName" name="first_name" placeholder="First Name" value="{{ old('first_name') }}" required>
+                            @error('first_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col">
+                            <label for="middleInitial" class="form-label">Middle Initial</label>
+                            <input type="text" maxlength="1" class="form-control @error('middle_initial') is-invalid @enderror" id="middleInitial" name="middle_initial" placeholder="M.I." value="{{ old('middle_initial') }}">
+                            @error('middle_initial')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <!-- Department Dropdown -->
+                    <div class="mb-3">
+                        <label for="employeeDepartment" class="form-label">Department</label>
+                        <select class="form-select @error('department') is-invalid @enderror" id="employeeDepartment" name="department" required>
+                            <option value="" disabled {{ old('department') ? '' : 'selected' }}>Select a department</option>
+                            @foreach($departments as $department)
+                                <option value="{{ $department }}" {{ old('department') == $department ? 'selected' : '' }}>{{ $department }}</option>
+                            @endforeach
+                        </select>
+                        @error('department')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Membership Status -->
+                    <div class="mb-3">
                         <label class="form-label">Membership Status</label>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="membership_status" id="member" value="Member" {{ old('membership_status', 'Member') == 'Member' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="member">Member</label>
+                            <input class="form-check-input" type="radio" name="membership_status" id="employeeMember" value="Member" {{ old('membership_status', 'Member') == 'Member' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="employeeMember">Member</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="membership_status" id="nonMember" value="Non-Member" {{ old('membership_status') == 'Non-Member' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="nonMember">Non-Member</label>
+                            <input class="form-check-input" type="radio" name="membership_status" id="employeeNonMember" value="Non-Member" {{ old('membership_status') == 'Non-Member' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="employeeNonMember">Non-Member</label>
                         </div>
                         @error('membership_status')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                </div>
 
-                    <!-- Department Input -->
-                    <div id="departmentField" class="d-none">
-                        <div class="mb-3">
-                            <label for="departmentInput" class="form-label">Department Name</label>
-                            <input type="text" class="form-control @error('department') is-invalid @enderror" id="departmentInput" name="department" placeholder="Enter department name" value="{{ old('department') }}">
-                            @error('department')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Department Modal -->
+<div class="modal fade" id="addDepartmentModal" tabindex="-1" aria-labelledby="addDepartmentModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDepartmentModalLabel">Add New Department</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <form method="POST" action="{{ route('customers.storeDepartmentAdmin') }}">
+                @csrf
+                <div class="modal-body">
+                    <!-- Department Name -->
+                    <div class="mb-3">
+                        <label for="departmentName" class="form-label">Department Name</label>
+                        <input type="text" class="form-control @error('department_name') is-invalid @enderror" id="departmentName" name="department_name" placeholder="Enter department name" value="{{ old('department_name') }}" required>
+                        @error('department_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                    <!-- Employee Fields -->
-                    <div id="employeeFields" class="d-none">
-                        <div class="mb-3">
-                            <label for="employeeId" class="form-label">Employee ID</label>
-                            <input type="text" class="form-control @error('employee_id') is-invalid @enderror" id="employeeId" name="employee_id" placeholder="Enter employee ID" value="{{ old('employee_id') }}" required>
-                            @error('employee_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    <!-- Membership Status -->
+                    <div class="mb-3">
+                        <label class="form-label">Membership Status</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="membership_status" id="departmentMember" value="Member" {{ old('membership_status', 'Member') == 'Member' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="departmentMember">Member</label>
                         </div>
-
-                        <div class="row mb-3">
-                            <div class="col">
-                                <label for="lastName" class="form-label">Last Name</label>
-                                <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="lastName" name="last_name" placeholder="Last Name" value="{{ old('last_name') }}" required>
-                                @error('last_name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col">
-                                <label for="firstName" class="form-label">First Name</label>
-                                <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="firstName" name="first_name" placeholder="First Name" value="{{ old('first_name') }}" required>
-                                @error('first_name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col">
-                                <label for="middleInitial" class="form-label">Middle Initial</label>
-                                <input type="text" maxlength="1" class="form-control @error('middle_initial') is-invalid @enderror" id="middleInitial" name="middle_initial" placeholder="M.I." value="{{ old('middle_initial') }}">
-                                @error('middle_initial')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="membership_status" id="departmentNonMember" value="Non-Member" {{ old('membership_status') == 'Non-Member' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="departmentNonMember">Non-Member</label>
                         </div>
-
-                        <div class="mb-3">
-                            <label for="employeeDepartment" class="form-label">Department</label>
-                            <select class="form-select @error('department') is-invalid @enderror" id="employeeDepartment" name="department">
-                                <option value="" disabled {{ old('department') ? '' : 'selected' }}>Select a department</option>
-                                <option value="NON-MEMBER" {{ old('department') == 'NON-MEMBER' ? 'selected' : '' }}>NON-MEMBER</option>
-                                @foreach($departments as $department)
-                                    <option value="{{ $department }}" {{ old('department') == $department ? 'selected' : '' }}>{{ $department }}</option>
-                                @endforeach
-                            </select>
-                            @error('department')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        @error('membership_status')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
@@ -437,41 +470,20 @@
 
 <script>
 window.onload = function () {
-    const typeEmployee = document.getElementById('typeEmployee');
-    const typeDepartment = document.getElementById('typeDepartment');
-    const departmentField = document.getElementById('departmentField');
-    const employeeFields = document.getElementById('employeeFields');
-    const membershipStatus = document.getElementById('membershipStatus');
-
-    function handleTypeSelection() {
-        membershipStatus.classList.add('d-none');
-        departmentField.classList.add('d-none');
-        employeeFields.classList.add('d-none');
-
-        if (typeDepartment && typeDepartment.checked) {
-            departmentField.classList.remove('d-none');
-            membershipStatus.classList.remove('d-none');
-        } else if (typeEmployee && typeEmployee.checked) {
-            employeeFields.classList.remove('d-none');
-            membershipStatus.classList.remove('d-none');
-        }
-    }
-
-    handleTypeSelection();
-
-    if (typeEmployee) typeEmployee.addEventListener('change', handleTypeSelection);
-    if (typeDepartment) typeDepartment.addEventListener('change', handleTypeSelection);
-
     // Show the correct modal if there are validation errors
     @if ($errors->any())
-        @if ($errors->hasBag('outside'))
-            // Show Outside User Modal
-            const addOutsideUserModal = new bootstrap.Modal(document.getElementById('addOutsideUserModal'));
-            addOutsideUserModal.show();
-        @else
-            // Show Regular Add User Modal
-            const addUserModal = new bootstrap.Modal(document.getElementById('addUserModal'));
-            addUserModal.show();
+        @if ($errors->has('employee_id') || $errors->has('last_name') || $errors->has('first_name') || $errors->has('department'))
+            // Show Add Employee Modal
+            const addEmployeeModal = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
+            addEmployeeModal.show();
+        @elseif ($errors->has('department_name'))
+            // Show Add Department Modal
+            const addDepartmentModal = new bootstrap.Modal(document.getElementById('addDepartmentModal'));
+            addDepartmentModal.show();
+        @elseif ($errors->has('outside_last_name') || $errors->has('outside_first_name'))
+            // Show Add Outside Customer Modal
+            const addOutsideCustomerModal = new bootstrap.Modal(document.getElementById('addOutsideCustomerModal'));
+            addOutsideCustomerModal.show();
         @endif
     @endif
 };
@@ -568,9 +580,6 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('customerNameToDelete').textContent = customerName;
         });
     });
-
-
-
 
 </script>
 

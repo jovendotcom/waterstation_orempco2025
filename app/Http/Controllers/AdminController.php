@@ -617,92 +617,60 @@ class AdminController extends Controller
         return view('admin.customer_list', compact('customers', 'departments'));
     }
 
-    public function storeCustomer(Request $request)
+    // Controller Method for Storing Employee
+    public function storeEmployeeAdmin(Request $request)
     {
-        // Validation
         $validatedData = $request->validate([
-            'type' => 'required|in:Department,Employee',
-            'department' => 'required_if:type,Department|string|max:255',
-
-            // For Employee
-            'employee_id' => 'nullable|required_if:type,Employee|string|max:255',
-            'last_name' => 'nullable|required_if:type,Employee|string|max:255',
-            'first_name' => 'nullable|required_if:type,Employee|string|max:255',
+            'employee_id' => 'required|string|max:255|unique:customers,employee_id',
+            'last_name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
             'middle_initial' => 'nullable|string|max:1',
-
-            // Membership status (for Employee and Department)
+            'department' => 'required|string|max:255',
             'membership_status' => 'required|in:Member,Non-Member',
         ], [
-            'type.required' => 'Please select the type of customer (Employee or Department).',
-            'type.in' => 'Invalid type selected.',
-
-            'department.required_if' => 'Department name is required for Department type.',
-            'department.max' => 'Department name must not exceed 255 characters.',
-
-            'employee_id.required_if' => 'Employee ID is required for Employee type.',
-            'employee_id.max' => 'Employee ID must not exceed 255 characters.',
-
-            'last_name.required_if' => 'Last name is required for Employee type.',
-            'last_name.max' => 'Last name must not exceed 255 characters.',
-            'first_name.required_if' => 'First name is required for Employee type.',
-            'first_name.max' => 'First name must not exceed 255 characters.',
-            'middle_initial.max' => 'Middle initial must not exceed 1 character.',
-
-            'membership_status.required' => 'Please select membership status.',
-            'membership_status.in' => 'Invalid membership status selected.',
+            'employee_id.required' => 'Employee ID is required.',
+            'employee_id.unique' => 'This Employee ID is already taken.',
+            'last_name.required' => 'Last name is required.',
+            'first_name.required' => 'First name is required.',
+            'department.required' => 'Department is required.',
+            'membership_status.required' => 'Membership status is required.',
         ]);
 
-        // Data Handling
-        if ($request->type === 'Department') {
-            $department = strtoupper($request->department);
-
-            // Check for existing department
-            $existingDepartment = Customer::where('type', 'Department')
-                ->whereRaw('UPPER(full_name) = ?', [$department])
-                ->first();
-
-            if ($existingDepartment) {
-                return redirect()
-                    ->back()
-                    ->withInput($request->except('department'))
-                    ->withErrors(['department' => 'This department already exists.']);
-            }
-
-            $fullName = $department;
-            $employeeId = null;
-
-        } elseif ($request->type === 'Employee') {
-            // Check for existing employee
-            $existingEmployee = Customer::where('employee_id', $request->employee_id)->first();
-
-            if ($existingEmployee) {
-                return redirect()
-                    ->back()
-                    ->withInput()
-                    ->withErrors(['employee_id' => 'This Employee ID already exists.']);
-            }
-
-            $lastName = strtoupper($request->last_name);
-            $firstName = strtoupper($request->first_name);
-            $middleInitial = strtoupper($request->middle_initial);
-
-            $fullName = $lastName . ', ' . $firstName;
-            $fullName .= $middleInitial ? ' ' . $middleInitial . '.' : '';
-
-            $employeeId = $request->employee_id;
-            $department = $request->department;
+        // Combine full name
+        $fullName = strtoupper($validatedData['last_name']) . ', ' . strtoupper($validatedData['first_name']);
+        if (!empty($validatedData['middle_initial'])) {
+            $fullName .= ' ' . strtoupper($validatedData['middle_initial']) . '.';
         }
 
-        // Save Customer
+        // Save Employee
         Customer::create([
-            'type' => $request->type,
-            'employee_id' => $employeeId,
+            'type' => 'Employee',
+            'employee_id' => $validatedData['employee_id'],
             'full_name' => $fullName,
-            'department' => $department,
-            'membership_status' => $request->membership_status,
+            'department' => $validatedData['department'],
+            'membership_status' => $validatedData['membership_status'],
         ]);
 
-        return redirect()->back()->with('success', 'Customer saved successfully!');
+        return redirect()->back()->with('success', 'Employee saved successfully!');
+    }
+
+    // Store Department
+    public function storeDepartment(Request $request)
+    {
+        $validatedData = $request->validate([
+            'department_name' => 'required|string|max:255|unique:customers,full_name',
+            'membership_status' => 'required|in:Member,Non-Member',
+        ]);
+
+        // Save Department
+        Customer::create([
+            'type' => 'Department',
+            'full_name' => strtoupper($validatedData['department_name']),
+            'department' => strtoupper($validatedData['department_name']),
+            'membership_status' => $validatedData['membership_status'],
+        ]);
+
+        return redirect()->back()->with('success', 'Department saved successfully!');
     }
     
     public function storeOutside(Request $request)

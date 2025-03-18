@@ -18,7 +18,7 @@ use App\Http\Controllers\ProductInventoryController;
 */
 
 Route::get('/', function () {
-    return redirect()->route('saleslogin'); // Redirect to adminlogin
+    return redirect()->route('saleslogin'); // Redirect to saleslogin
 });
 
 //Admin Routes
@@ -63,7 +63,8 @@ Route::prefix('admin')->group(function () {
         Route::get('/stocks/export/{format}', [AdminController::class, 'exportStocks'])->name('stocks.exportAdmin');
 
         Route::GET('/customerlist', [AdminController::class, 'customerList'])->name('admin.customerlist');
-        Route::post('/customers', [AdminController::class, 'storeCustomer'])->name('customers.storeCustomerAdmin');
+        Route::post('/customers/store-employee', [AdminController::class, 'storeEmployeeAdmin'])->name('customers.storeEmployeeAdmin');
+        Route::post('/customers/store-department', [AdminController::class, 'storeDepartment'])->name('customers.storeDepartmentAdmin');
         Route::post('/customers/outside', [AdminController::class, 'storeOutside'])->name('customers.storeOutsideAdmin');
         Route::get('/get-departments', [AdminController::class, 'getDepartments']);//this is to show the departments in the dropdown
         Route::put('customers/{id}', [AdminController::class, 'update'])->name('customers.updateAdmin');
