@@ -44,8 +44,8 @@ Route::prefix('admin')->group(function () {
         Route::GET('/productInventory', [AdminController::class, 'productInventory'])->name('admin.productInventory');
         Route::post('/products/store', [AdminController::class, 'store'])->name('products.storeProductAdmin');
         Route::post('/products/addStock', [AdminController::class, 'addStock'])->name('products.addStockAdmin');
-
         Route::post('/products/update-price', [AdminController::class, 'updatePrice'])->name('products.updatePrice');
+        Route::put('/products/update', [AdminController::class, 'updateProduct'])->name('products.updateProduct');
 
         Route::GET('/categories', [AdminController::class, 'getCategories'])->name('admin.categories');
         Route::post('/categories/store', [AdminController::class, 'storeCategories'])->name('admin.category.store');

@@ -386,6 +386,41 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Price updated successfully.');
     }
 
+    public function updateProduct(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products_for_sale,id',
+            'product_name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'quantity' => 'nullable|integer|min:0',
+            'subcategory_id' => 'required|exists:subcategories,id',
+            'size_options' => 'nullable|string',
+            'product_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'items_needed' => 'nullable|array',
+            'material_quantities' => 'nullable|array',
+        ]);
+    
+        $product = ProductForSale::find($request->product_id);
+    
+        // Handle product image upload
+        if ($request->hasFile('product_image')) {
+            $imagePath = $request->file('product_image')->store('product_images', 'public');
+            $product->product_image = $imagePath;
+        }
+    
+        $product->update([
+            'product_name' => $request->product_name,
+            'price' => $request->price,
+            'quantity' => $request->quantity,
+            'subcategory_id' => $request->subcategory_id,
+            'size_options' => $request->size_options,
+            'items_needed' => json_encode($request->items_needed),
+            'material_quantities' => json_encode($request->material_quantities),
+        ]);
+    
+        return redirect()->back()->with('success', 'Product updated successfully.');
+    }
+
     public function getCategories()
     {   
 

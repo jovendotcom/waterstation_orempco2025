@@ -79,7 +79,10 @@
                                     <ul class="list-unstyled mb-0">
                                         @foreach($items as $stockId => $itemName)
                                             <li>
-                                                {{ $itemName }} - {{ $materialQuantities[$stockId] ?? 0 }} {{ $stocks->find($stockId)->unit_of_measurement ?? '' }}
+                                                {{ $itemName }}
+                                                @if(!$product->quantity)
+                                                    - {{ $materialQuantities[$stockId] ?? 0 }} {{ $stocks->find($stockId)->unit_of_measurement ?? '' }}
+                                                @endif
                                             </li>
                                         @endforeach
                                     </ul>
@@ -91,7 +94,19 @@
                             <td>{{ number_format($product->price, 2) }}</td>
                             <td>
                                 <!-- Edit Button -->
-                                <button class="btn btn-success btn-sm add-stock-btn" title="Edit">
+                                <button class="btn btn-success btn-sm edit-product-btn" 
+                                        title="Edit"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editProductModal" 
+                                        data-id="{{ $product->id }}" 
+                                        data-name="{{ $product->product_name }}"
+                                        data-price="{{ $product->price }}"
+                                        data-quantity="{{ $product->quantity }}"
+                                        data-subcategory-id="{{ $product->subcategory_id }}"
+                                        data-size-options="{{ $product->size_options }}"
+                                        data-product-image="{{ $product->product_image }}"
+                                        data-items-needed="{{ json_encode($product->items_needed) }}"
+                                        data-material-quantities="{{ json_encode($product->material_quantities) }}">
                                     <i class="fas fa-edit"></i> 
                                 </button>
 
@@ -319,6 +334,145 @@
     </div>
 </div>
 
+<!-- Edit Product Modal -->
+<div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog" style="max-width: 900px;">
+        <div class="modal-content">
+            <form action="{{ route('products.updateProduct') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="product_id" id="edit_product_id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Use Bootstrap grid to create two columns -->
+                    <div class="row">
+                        <!-- Left Column -->
+                        <div class="col-md-6">
+                            <!-- Subcategory Dropdown -->
+                            <div class="mb-3">
+                                <label for="edit_subcategory_id" class="form-label">Subcategory <span class="text-danger">*</span></label>
+                                <select class="form-select" id="edit_subcategory_id" name="subcategory_id" required>
+                                    <option value="">Select Subcategory</option>
+                                    @foreach($subcategories as $subcategory)
+                                        <option value="{{ $subcategory->id }}">{{ $subcategory->sub_name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('subcategory_id')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <!-- Product Name Field -->
+                            <div class="mb-3">
+                                <label for="edit_product_name" class="form-label">Product Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control @error('product_name') is-invalid @enderror" id="edit_product_name" name="product_name" value="{{ old('product_name') }}" required>
+                                @error('product_name')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <!-- Price Field -->
+                            <div class="mb-3">
+                                <label for="edit_price" class="form-label">Price <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control @error('price') is-invalid @enderror" id="edit_price" name="price" required>
+                                @error('price')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <!-- Quantity Field -->
+                            <div class="mb-3">
+                                <label for="edit_quantity" class="form-label">Quantity (Optional)</label>
+                                <input type="number" class="form-control" id="edit_quantity" name="quantity">
+                                <small class="text-muted">Leave this field empty if the product does not have a fixed quantity.</small>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="col-md-6">
+                            <!-- Size Options Dropdown -->
+                            <div class="mb-3">
+                                <label for="edit_size_options" class="form-label">Size Options <span class="text-danger">*</span></label>
+                                <select class="form-select @error('size_options') is-invalid @enderror" id="edit_size_options" name="size_options" required>
+                                    <option value="">Select Size</option>
+                                    @foreach($sizeOptions as $size)
+                                        <option value="{{ $size }}">{{ $size }}</option>
+                                    @endforeach
+                                </select>
+                                @error('size_options')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <!-- Product Image Field -->
+                            <div class="mb-3">
+                                <label for="edit_product_image" class="form-label">Product Image <span class="text-danger">*</span></label>
+                                <input type="file" class="form-control @error('product_image') is-invalid @enderror" id="edit_product_image" name="product_image" accept="image/*" onchange="previewEditImage(event)">
+                                @error('product_image')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <!-- Image Preview -->
+                            <div class="mb-3 text-center">
+                                <img id="editImagePreview" src="" class="img-fluid rounded" style="max-height: 150px; display: none;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items Needed Field (Grouped by Category) -->
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label">Select Material(s) Needed for this product:</label>
+                            @foreach($categories as $category)
+                                <div class="mb-3">
+                                    <h6 class="fw-bold">{{ $category->name }}</h6>
+                                    <div class="border p-2 rounded" style="max-height: 150px; overflow-y: auto;">
+                                        @foreach($stocks->where('category_id', $category->id)->sortBy('item_name') as $stock)
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <!-- Material Checkbox and Label -->
+                                                <div class="form-check">
+                                                    <input class="form-check-input material-checkbox" type="checkbox" name="items_needed[{{ $stock->id }}]" value="{{ $stock->item_name }}" data-unit="{{ $stock->unit_of_measurement }}" data-stock-id="{{ $stock->id }}">
+                                                    <label class="form-check-label" for="stock_{{ $stock->id }}">
+                                                        <strong class="text-black">{{ $stock->item_name }}</strong> <span class="text-success">(Available: {{ $stock->quantity }} {{ $stock->unit_of_measurement }})</span>
+                                                    </label>
+                                                </div>
+                                                <!-- Quantity Input (Hidden by Default) -->
+                                                <div class="input-group quantity-input" style="width: 180px; display: none;">
+                                                    <input type="number" class="form-control" name="material_quantities[{{ $stock->id }}]" placeholder="Quantity" min="1">
+                                                    <span class="input-group-text">{{ $stock->unit_of_measurement }}</span>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     function previewImage(event) {
         let reader = new FileReader();
@@ -374,5 +528,75 @@
             });
         });
     });
+
+    document.addEventListener("DOMContentLoaded", function () {
+    // Edit Product Modal
+    document.getElementById('editProductModal').addEventListener('show.bs.modal', function (event) {
+        let button = event.relatedTarget;
+        let productId = button.getAttribute('data-id');
+        let productName = button.getAttribute('data-name');
+        let productPrice = button.getAttribute('data-price');
+        let productQuantity = button.getAttribute('data-quantity');
+        let subcategoryId = button.getAttribute('data-subcategory-id');
+        let sizeOptions = button.getAttribute('data-size-options');
+        let productImage = button.getAttribute('data-product-image');
+        let itemsNeeded = JSON.parse(button.getAttribute('data-items-needed') || '{}');
+        let materialQuantities = JSON.parse(button.getAttribute('data-material-quantities') || '{}');
+
+        // Set basic fields
+        document.getElementById('edit_product_id').value = productId;
+        document.getElementById('edit_product_name').value = productName;
+        document.getElementById('edit_price').value = productPrice;
+        document.getElementById('edit_quantity').value = productQuantity;
+        document.getElementById('edit_subcategory_id').value = subcategoryId;
+        document.getElementById('edit_size_options').value = sizeOptions;
+
+        // Set product image preview
+        if (productImage) {
+            document.getElementById('editImagePreview').src = "{{ asset('storage/') }}/" + productImage;
+            document.getElementById('editImagePreview').style.display = 'block';
+        }
+
+        // Reset all material checkboxes and quantity inputs
+        document.querySelectorAll('.material-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+            checkbox.closest('.d-flex').querySelector('.quantity-input').style.display = 'none';
+            checkbox.closest('.d-flex').querySelector('.quantity-input input').value = '';
+        });
+
+        // Set materials needed checkboxes and quantities
+        Object.keys(itemsNeeded).forEach(stockId => {
+            let checkbox = document.querySelector(`.material-checkbox[data-stock-id="${stockId}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+                checkbox.closest('.d-flex').querySelector('.quantity-input').style.display = 'flex';
+                checkbox.closest('.d-flex').querySelector('.quantity-input input').value = materialQuantities[stockId] || '';
+            }
+        });
+    });
+
+    // Handle material checkbox click
+    document.querySelectorAll('.material-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            const quantityInput = checkbox.closest('.d-flex').querySelector('.quantity-input');
+            if (checkbox.checked) {
+                quantityInput.style.display = 'flex';
+            } else {
+                quantityInput.style.display = 'none';
+            }
+        });
+    });
+
+    // Image preview for edit modal
+    function previewEditImage(event) {
+        let reader = new FileReader();
+        reader.onload = function () {
+            let output = document.getElementById('editImagePreview');
+            output.src = reader.result;
+            output.style.display = 'block';
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+});
 </script>
 @endsection

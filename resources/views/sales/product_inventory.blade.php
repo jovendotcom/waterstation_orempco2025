@@ -78,7 +78,10 @@
                                     <ul class="list-unstyled mb-0">
                                         @foreach($items as $stockId => $itemName)
                                             <li>
-                                                {{ $itemName }} - {{ $materialQuantities[$stockId] ?? 0 }} {{ $stocks->find($stockId)->unit_of_measurement ?? '' }}
+                                                {{ $itemName }}
+                                                @if(!$product->quantity)
+                                                    - {{ $materialQuantities[$stockId] ?? 0 }} {{ $stocks->find($stockId)->unit_of_measurement ?? '' }}
+                                                @endif
                                             </li>
                                         @endforeach
                                     </ul>
