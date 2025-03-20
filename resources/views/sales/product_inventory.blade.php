@@ -167,8 +167,8 @@
                         <div class="col-md-6">
                             <!-- Size Options Dropdown -->
                             <div class="mb-3">
-                                <label for="size_options" class="form-label">Size Options <span class="text-danger">*</span></label>
-                                <select class="form-select @error('size_options') is-invalid @enderror" id="size_options" name="size_options" required>
+                                <label for="size_options" class="form-label">Size Options</label>
+                                <select class="form-select @error('size_options') is-invalid @enderror" id="size_options" name="size_options">
                                     <option value="">Select Size</option>
                                     @foreach($sizeOptions as $size)
                                         <option value="{{ $size }}">{{ $size }}</option>

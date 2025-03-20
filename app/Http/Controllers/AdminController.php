@@ -335,7 +335,7 @@ class AdminController extends Controller
             'material_quantities' => json_encode($materialQuantities),
             'material_quantity_unit_of_measurement' => json_encode($materialQuantityUnits), // Add this line
             'subcategory_id' => $request->subcategory_id,
-            'size_options' => $request->size_options,
+            'size_options' => $request->size_options,   
             'unit_of_measurement' => $request->unit_of_measurement,
         ]);
     

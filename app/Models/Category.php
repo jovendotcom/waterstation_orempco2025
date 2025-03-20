@@ -29,4 +29,12 @@ class Category extends Model
     {
         return $this->hasMany(StocksCount::class);
     }
+
+    // In App\Models\Category.php
+
+    public function materials()
+    {
+        return $this->hasMany(MaterialInventory::class);
+    }
+
 }

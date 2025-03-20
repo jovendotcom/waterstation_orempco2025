@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\CustomerListController;
 use App\Http\Controllers\ProductInventoryController;
+use App\Http\Controllers\MaterialInventoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -77,6 +78,12 @@ Route::prefix('admin')->group(function () {
 
         Route::GET('/admin_userprofile', [AdminController::class, 'userProfile'])->name('admin.userProfile');
         Route::post('/user/profile/update-password', [AdminController::class, 'changePassword'])->name('admin.changePassword');
+
+        Route::GET('/material-inventory', [MaterialInventoryController::class, 'getMaterialInventory'])->name('admin.materialInventory');
+        Route::post('/materials-inventory', [MaterialInventoryController::class, 'store'])->name('materials_inventory.store');
+        Route::get('/materials-inventory/{id}/edit', [MaterialInventoryController::class, 'edit'])->name('materials_inventory.edit');
+        Route::put('/materials-inventory/{id}', [MaterialInventoryController::class, 'update'])->name('materials_inventory.update');
+        Route::delete('/materials-inventory/{id}', [MaterialInventoryController::class, 'destroy'])->name('materials_inventory.destroy');
     });
 });
 

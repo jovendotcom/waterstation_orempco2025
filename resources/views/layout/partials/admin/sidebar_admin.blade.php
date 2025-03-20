@@ -64,6 +64,11 @@
                 User Profile
             </a>
 
+            <a class="nav-link text-white {{ request()->routeIs('admin.materialInventory') ? 'active' : '' }}" href="{{ route('admin.materialInventory') }}">
+                <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-hammer"></i></div>
+                Material Inventory
+            </a>
+
             <!-- Add more admin links with respective icons here -->
         </div>
     </div>
