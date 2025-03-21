@@ -49,53 +49,54 @@ class ProductAdminController extends Controller
 
     // Store a new product
     public function storeProduct(Request $request)
-    {   
+    {
         // Validate the request
         $validated = $request->validate([
-            'product_name' => 'required|string|max:255',
+            'product_name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('products_inventory', 'product_name')->where(function ($query) use ($request) {
+                    return $query->where('subcategory_id', $request->subcategory_id)
+                                 ->where('size_options', $request->size_options);
+                }),
+            ],
             'price' => 'required|numeric|min:0',
             'subcategory_id' => 'required|exists:subcategories,id',
-            'materials' => 'required|array',
-            'materials.*.material_id' => 'required|exists:materials_inventory,id',
-            'materials.*.quantity_used' => 'required|numeric|min:0',
+            'product_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'size_options' => 'nullable|string|max:50',
+            'materials' => 'nullable|array',
+            'materials.*.material_id' => 'nullable|exists:materials_inventory,id',
+            'materials.*.quantity_used' => 'nullable|numeric|min:0',
         ]);
     
-        // Start a database transaction
-        DB::beginTransaction();
-    
-        try {
-            // Create the product
-            $product = ProductInventory::create([
-                'product_name' => $validated['product_name'],
-                'price' => $validated['price'],
-                'subcategory_id' => $validated['subcategory_id'],
-            ]);
-    
-            // Attach materials to the product
-            foreach ($request->materials as $material) {
-                $product->materials()->attach($material['material_id'], [
-                    'quantity_used' => $material['quantity_used']
-                ]);
-            }
-    
-            // Commit the transaction
-            DB::commit();
-    
-            // Log success
-            Log::info('Product added successfully:', ['product' => $product]);
-    
-            // Set success message
-            return redirect()->route('admin.productInventoryAdmin')->with('success', 'Product added successfully!');
-        } catch (\Exception $e) {
-            // Rollback the transaction on error
-            DB::rollBack();
-    
-            // Log the error
-            Log::error('Failed to add product: ' . $e->getMessage());
-    
-            // Set fail message
-            return redirect()->back()->with('fail', 'Failed to add product. Please try again.');
+        // Handle image upload
+        $imagePath = null;
+        if ($request->hasFile('product_image')) {
+            $imagePath = $request->file('product_image')->store('product_images', 'public');
         }
+    
+        // Create the product
+        $product = ProductInventory::create([
+            'product_name' => $validated['product_name'],
+            'price' => $validated['price'],
+            'subcategory_id' => $validated['subcategory_id'],
+            'product_image' => $imagePath,
+            'size_options' => $validated['size_options'],
+        ]);
+    
+        // Attach materials to the product if provided
+        if (!empty($request->materials)) {
+            foreach ($request->materials as $material) {
+                if (!empty($material['material_id']) && !empty($material['quantity_used'])) {
+                    $product->materials()->attach($material['material_id'], [
+                        'quantity_used' => $material['quantity_used']
+                    ]);
+                }
+            }
+        }
+    
+        return redirect()->route('admin.productInventoryAdmin')->with('success', 'Product added successfully!');
     }
 
     public function destroy($id)

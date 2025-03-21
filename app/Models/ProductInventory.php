@@ -22,6 +22,7 @@ class ProductInventory extends Model
         'subcategory_id',
         'product_image',
         'product_quantity',
+        'size_options',
     ];
 
     // Define the fields that should be hidden from JSON output
