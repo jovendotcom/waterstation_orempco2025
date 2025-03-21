@@ -73,7 +73,7 @@
                         <td>{{ $material->material_name }}</td>
                         <td>{{ $material->total_stocks }} {{ $material->unit }}</td>
                         <td>₱{{ number_format($material->cost_per_unit, 2) }}</td>
-                        <td>{{ $material->low_stock_limit ?? 'N/A' }}</td>
+                        <td>{{ $material->low_stock_limit ?? 'N/A' }} {{ $material->unit }}</td>
                         <td>
                             @if($material->total_stocks == 0)
                                 <span class="badge bg-danger text-white">Out of Stock</span>
@@ -114,6 +114,16 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <!-- Note for Unit Conversion -->
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> If the inputted stocks are in liters (L) or kilograms (kg), please convert them into milliliters (ml) or grams (g) respectively. For example:
+                        <ul class="mt-2">
+                            <li>1 Liter (L) = 1000 Milliliters (ml)</li>
+                            <li>1 Kilogram (kg) = 1000 Grams (g)</li>
+                        </ul>
+                    </div>
+
                     <!-- Display Validation Errors -->
                     @if ($errors->any())
                         <div class="alert alert-danger">
@@ -125,6 +135,7 @@
                         </div>
                     @endif
 
+                    <!-- Rest of the form fields -->
                     <div class="row g-3">
                         <!-- Category -->
                         <div class="col-md-6">
@@ -156,7 +167,7 @@
                             <div class="row g-3">
                                 <!-- Total Stocks -->
                                 <div class="col-md-6">
-                                    <label for="total_stocks" class="form-label fw-semibold">Total Stocks <span class="text-danger">*</span></label>
+                                    <label for="total_stocks" class="form-label fw-semibold">No. of Stocks <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control @error('total_stocks') is-invalid @enderror" id="total_stocks" name="total_stocks" value="{{ old('total_stocks') }}" placeholder="e.g., 5000" required min="0">
                                     @error('total_stocks')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -192,8 +203,8 @@
 
                         <!-- Low Stock Limit -->
                         <div class="col-md-6">
-                            <label for="low_stock_limit" class="form-label fw-semibold">Low Stock Limit</label>
-                            <input type="number" class="form-control @error('low_stock_limit') is-invalid @enderror" id="low_stock_limit" name="low_stock_limit" value="{{ old('low_stock_limit') }}" placeholder="e.g., 100" min="0">
+                            <label for="low_stock_limit" class="form-label fw-semibold">Low Stock Limit <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control @error('low_stock_limit') is-invalid @enderror" id="low_stock_limit" name="low_stock_limit" value="{{ old('low_stock_limit') }}" placeholder="e.g., 100" min="0" required>
                             @error('low_stock_limit')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -208,6 +219,53 @@
         </div>
     </div>
 </div>
+
+<!-- Stock Reminder Modal -->
+<div class="modal fade" id="stockReminderModal" tabindex="-1" aria-labelledby="stockReminderModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title" id="stockReminderModalLabel"><i class="fas fa-exclamation-triangle me-2"></i>Stock Reminder</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-semibold">The following materials require your attention:</p>
+                <ul class="list-group">
+                    @foreach($materials as $material)
+                        @if($material->total_stocks == 0 || ($material->low_stock_limit && $material->total_stocks <= $material->low_stock_limit))
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-semibold">{{ $material->material_name }}</span> ({{ $material->category->name ?? 'N/A' }})
+                                </div>
+                                <div>
+                                    @if($material->total_stocks == 0)
+                                        <span class="badge bg-danger text-white">Out of Stock</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark">Low Stock</span>
+                                    @endif
+                                </div>
+                            </li>
+                        @endif
+                    @endforeach
+                </ul>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if($materials->contains(function($material) {
+    return $material->total_stocks == 0 || ($material->low_stock_limit && $material->total_stocks <= $material->low_stock_limit);
+}))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var stockReminderModal = new bootstrap.Modal(document.getElementById('stockReminderModal'));
+            stockReminderModal.show();
+        });
+    </script>
+@endif
 
 <!-- Auto Open Modal if Validation Fails -->
 @if ($errors->any())

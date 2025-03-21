@@ -29,6 +29,7 @@ class MaterialInventory extends Model
     }
 
     public function products() {
-        return $this->belongsToMany(ProductInventory::class)->withPivot('quantity_used');
-    }
+        return $this->belongsToMany(ProductInventory::class, 'material_inventory_product_inventory', 'material_id', 'product_id')
+                    ->withPivot('quantity_used');
+    }    
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\SalesController;
 use App\Http\Controllers\CustomerListController;
 use App\Http\Controllers\ProductInventoryController;
 use App\Http\Controllers\MaterialInventoryController;
+use App\Http\Controllers\ProductAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,6 +85,12 @@ Route::prefix('admin')->group(function () {
         Route::get('/materials-inventory/{id}/edit', [MaterialInventoryController::class, 'edit'])->name('materials_inventory.edit');
         Route::put('/materials-inventory/{id}', [MaterialInventoryController::class, 'update'])->name('materials_inventory.update');
         Route::delete('/materials-inventory/{id}', [MaterialInventoryController::class, 'destroy'])->name('materials_inventory.destroy');
+
+        Route::GET('/productInventoryAdmin', [ProductAdminController::class, 'productInventory'])->name('admin.productInventoryAdmin');
+        Route::post('/products', [ProductAdminController::class, 'storeProduct'])->name('products.store');
+        Route::get('/products/{id}/edit', [ProductAdminController::class, 'edit'])->name('products.edit');
+        Route::put('/products/{id}', [ProductAdminController::class, 'update'])->name('products.update');
+        Route::delete('/products/{id}', [ProductAdminController::class, 'destroy'])->name('products.destroy');
     });
 });
 

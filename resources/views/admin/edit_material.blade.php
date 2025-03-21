@@ -67,7 +67,7 @@
                     <div class="row g-3">
                         <!-- Total Stocks -->
                         <div class="col-md-6">
-                            <label for="total_stocks" class="form-label fw-semibold">Total Stocks <span class="text-danger">*</span></label>
+                            <label for="total_stocks" class="form-label fw-semibold">No. of Stocks <span class="text-danger">*</span></label>
                             <input type="number" class="form-control @error('total_stocks') is-invalid @enderror" id="total_stocks" name="total_stocks" value="{{ $material->total_stocks }}" placeholder="e.g., 5000" required min="0">
                             @error('total_stocks')
                                 <div class="invalid-feedback">{{ $message }}</div>

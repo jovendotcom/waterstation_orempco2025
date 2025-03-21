@@ -69,6 +69,11 @@
                 Material Inventory
             </a>
 
+            <a class="nav-link text-white {{ request()->routeIs('admin.productInventoryAdmin') ? 'active' : '' }}" href="{{ route('admin.productInventoryAdmin') }}">
+                <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-blender"></i></div>
+                Product Inventory (Test)
+            </a>
+
             <!-- Add more admin links with respective icons here -->
         </div>
     </div>
