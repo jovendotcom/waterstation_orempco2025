@@ -7,6 +7,7 @@ use App\Http\Controllers\CustomerListController;
 use App\Http\Controllers\ProductInventoryController;
 use App\Http\Controllers\MaterialInventoryController;
 use App\Http\Controllers\ProductAdminController;
+use App\Http\Controllers\SalesProcessingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -109,6 +110,8 @@ Route::prefix('sales')->group(function () {
         Route::get('/sales/customers', [SalesController::class, 'getCustomers'])->name('sales.customers');
         Route::post('/sales/store', [SalesController::class, 'store'])->name('sales.store');
         Route::get('/sales/new-po', [SalesController::class, 'newPo'])->name('sales.newPo');
+        Route::get('/sales/new-so', [SalesProcessingController::class, 'newSo'])->name('sales.newSo');
+        Route::post('/sales/process-checkout', [SalesProcessingController::class, 'processCheckout'])->name('sales.processCheckout');
 
         Route::GET('/saleshistory', [SalesController::class, 'salesHistory'])->name('sales.salesHistory');
 
@@ -135,6 +138,9 @@ Route::prefix('sales')->group(function () {
 
         Route::GET('/sales_userprofile', [SalesController::class, 'userProfile'])->name('sales.userProfile');
         Route::post('/user/profile/update-password', [SalesController::class, 'changePassword'])->name('sales.changePassword');
+
+        Route::GET('/salesprocessing', [SalesProcessingController::class, 'salesProcess'])->name('sales.sales');
+        Route::get('/products/{id}/materials', [SalesProcessingController::class, 'getMaterials'])->name('sales.materials');
         
     });
 });

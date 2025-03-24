@@ -41,7 +41,7 @@ class ProductInventoryController extends Controller
             'subcategory_id' => 'required|exists:subcategories,id',
             'product_name' => 'required|string|max:255',
             'price' => 'required|numeric',
-            'size_options' => 'required|string',
+            'size_options' => 'nullable|required|string',
             'product_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'items_needed' => 'required|array',
             'material_quantities' => 'required|array',

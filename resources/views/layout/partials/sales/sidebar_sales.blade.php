@@ -75,6 +75,11 @@
                 User Profile
             </a>
 
+            <a class="nav-link text-white {{ request()->routeIs('sales.sales') ? 'active' : '' }}" href="{{ route('sales.sales') }}">
+                <div class="sb-nav-link-icon text-white"><i class="fa-solid fa-file-waveform"></i></div>
+                Sales
+            </a>
+
             <!-- Add more sales links with respective icons here -->
         </div>
     </div>
