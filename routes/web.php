@@ -86,6 +86,8 @@ Route::prefix('admin')->group(function () {
         Route::get('/materials-inventory/{id}/edit', [MaterialInventoryController::class, 'edit'])->name('materials_inventory.edit');
         Route::put('/materials-inventory/{id}', [MaterialInventoryController::class, 'update'])->name('materials_inventory.update');
         Route::delete('/materials-inventory/{id}', [MaterialInventoryController::class, 'destroy'])->name('materials_inventory.destroy');
+        Route::get('/materials-inventory/export-pdf', [MaterialInventoryController::class, 'exportPdf'])->name('materials_inventory.export.pdf'); 
+        Route::get('/materials-inventory/export/excel', [MaterialInventoryController::class, 'exportExcel'])->name('materials_inventory.export.excel');
 
         Route::GET('/productInventoryAdmin', [ProductAdminController::class, 'productInventory'])->name('admin.productInventoryAdmin');
         Route::post('/products', [ProductAdminController::class, 'storeProduct'])->name('products.store');

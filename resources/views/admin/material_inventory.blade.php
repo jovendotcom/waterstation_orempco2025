@@ -35,8 +35,8 @@
                 <i class="fas fa-file-export me-1"></i> Export Material Inventory
             </button>
             <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href=""><i class="fas fa-file-excel me-1"></i> Export as Excel</a></li>
-                <li><a class="dropdown-item" href=""><i class="fas fa-file-pdf me-1"></i> Export as PDF</a></li>
+                <li><a class="dropdown-item" href="{{ route('materials_inventory.export.excel') }}"><i class="fas fa-file-excel me-1"></i> Export as Excel</a></li>
+                <li><a class="dropdown-item" href="{{ route('materials_inventory.export.pdf') }}"><i class="fas fa-file-pdf me-1"></i> Export as PDF</a></li>
             </ul>
         </div>
 

@@ -28,6 +28,12 @@ use App\Exports\CustomersExportAdmin;
 use Illuminate\Support\Carbon;
 use App\Exports\SalesReportExportAdmin;
 use App\Models\MaterialInventory;
+use App\Models\ProductInventory;
+use Illuminate\Support\Facades\Log;
+use App\Models\SalesTransactionProcess;
+use App\Models\SalesTransactionItem;
+use App\Exports\MaterialInventoryExport;
+
 
 class MaterialInventoryController extends Controller
 {
@@ -132,6 +138,37 @@ class MaterialInventoryController extends Controller
         $material->delete();
 
         return redirect()->back()->with('success', 'Material deleted successfully!');
+    }
+
+    public function exportPdf()
+    {
+        // Fetch materials data with their category
+        $materials = MaterialInventory::with('category')->get();
+
+        // Group materials by category
+        $groupedMaterials = $materials->groupBy(function ($material) {
+            return $material->category->name ?? 'Uncategorized';
+        });
+
+        // Generate PDF
+        $pdf = Pdf::loadView('exports.material_inventory', compact('groupedMaterials'));
+
+        // Download the PDF
+        return $pdf->download('material_inventory.pdf');
+    }
+
+    public function exportExcel()
+    {
+        // Fetch materials data with their category
+        $materials = MaterialInventory::with('category')->get();
+
+        // Group materials by category
+        $groupedMaterials = $materials->groupBy(function ($material) {
+            return $material->category->name ?? 'Uncategorized';
+        });
+
+        // Export to Excel
+        return Excel::download(new MaterialInventoryExport($groupedMaterials), 'material_inventory.xlsx');
     }
     
 }
